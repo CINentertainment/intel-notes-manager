@@ -1,3 +1,33 @@
+import sqlite3
+
+
+DATABASE_NAME = "intel_notes.db"
+
+
+def create_database():
+    connection = sqlite3.connect(DATABASE_NAME)
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS notes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT NOT NULL,
+            date TEXT,
+            source TEXT,
+            classification TEXT,
+            discipline TEXT,
+            location TEXT,
+            tags TEXT,
+            reliability TEXT,
+            credibility TEXT,
+            body TEXT
+        )
+    """)
+
+    connection.commit()
+    connection.close()
+
+
 def display_menu():
     print("\n" + "=" * 50)
     print("INTEL NOTES MANAGER")
@@ -27,42 +57,71 @@ def create_note():
     print("\nEnter intelligence note:")
     body = input("> ")
 
-    note = {
-        "title": title,
-        "date": date,
-        "source": source,
-        "classification": classification,
-        "discipline": discipline,
-        "location": location,
-        "tags": tags,
-        "reliability": reliability,
-        "credibility": credibility,
-        "body": body
-    }
+    connection = sqlite3.connect(DATABASE_NAME)
+    cursor = connection.cursor()
 
-    print("\nIntelligence note created successfully.")
+    cursor.execute("""
+        INSERT INTO notes (
+            title,
+            date,
+            source,
+            classification,
+            discipline,
+            location,
+            tags,
+            reliability,
+            credibility,
+            body
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        title,
+        date,
+        source,
+        classification,
+        discipline,
+        location,
+        tags,
+        reliability,
+        credibility,
+        body
+    ))
 
-    return note
+    connection.commit()
+    connection.close()
+
+    print("\nIntelligence note saved successfully.")
 
 
-def display_note(note, number=None):
-    if number is not None:
-        print(f"\nNote #{number}")
-
+def display_note(note):
+    print(f"\nNote ID: {note[0]}")
     print("-" * 50)
-    print(f"Title: {note['title']}")
-    print(f"Date: {note['date']}")
-    print(f"Source: {note['source']}")
-    print(f"Classification: {note['classification']}")
-    print(f"INT Discipline: {note['discipline']}")
-    print(f"Location: {note['location']}")
-    print(f"Tags: {note['tags']}")
-    print(f"Source Reliability: {note['reliability']}")
-    print(f"Information Credibility: {note['credibility']}")
-    print(f"Note: {note['body']}")
+    print(f"Title: {note[1]}")
+    print(f"Date: {note[2]}")
+    print(f"Source: {note[3]}")
+    print(f"Classification: {note[4]}")
+    print(f"INT Discipline: {note[5]}")
+    print(f"Location: {note[6]}")
+    print(f"Tags: {note[7]}")
+    print(f"Source Reliability: {note[8]}")
+    print(f"Information Credibility: {note[9]}")
+    print(f"Note: {note[10]}")
 
 
-def view_notes(notes):
+def view_notes():
+    connection = sqlite3.connect(DATABASE_NAME)
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        SELECT *
+        FROM notes
+        ORDER BY id
+    """)
+
+    notes = cursor.fetchall()
+
+    connection.close()
+
     if len(notes) == 0:
         print("\nNo intelligence notes found.")
         return
@@ -71,39 +130,58 @@ def view_notes(notes):
     print("INTELLIGENCE NOTES")
     print("=" * 50)
 
-    for index, note in enumerate(notes, start=1):
-        display_note(note, index)
+    for note in notes:
+        display_note(note)
+
+    print(f"\nTotal notes: {len(notes)}")
 
 
-def search_notes(notes):
-    if len(notes) == 0:
-        print("\nNo intelligence notes available to search.")
-        return
-
+def search_notes():
     print("\n" + "=" * 50)
     print("SEARCH INTELLIGENCE NOTES")
     print("=" * 50)
 
-    search_term = input("Enter search term: ").strip().lower()
+    search_term = input("Enter search term: ").strip()
 
-    results = []
+    if not search_term:
+        print("\nSearch term cannot be empty.")
+        return
 
-    for note in notes:
-        searchable_text = " ".join([
-            note["title"],
-            note["date"],
-            note["source"],
-            note["classification"],
-            note["discipline"],
-            note["location"],
-            note["tags"],
-            note["reliability"],
-            note["credibility"],
-            note["body"]
-        ]).lower()
+    connection = sqlite3.connect(DATABASE_NAME)
+    cursor = connection.cursor()
 
-        if search_term in searchable_text:
-            results.append(note)
+    search_pattern = f"%{search_term}%"
+
+    cursor.execute("""
+        SELECT *
+        FROM notes
+        WHERE title LIKE ?
+           OR date LIKE ?
+           OR source LIKE ?
+           OR classification LIKE ?
+           OR discipline LIKE ?
+           OR location LIKE ?
+           OR tags LIKE ?
+           OR reliability LIKE ?
+           OR credibility LIKE ?
+           OR body LIKE ?
+        ORDER BY id
+    """, (
+        search_pattern,
+        search_pattern,
+        search_pattern,
+        search_pattern,
+        search_pattern,
+        search_pattern,
+        search_pattern,
+        search_pattern,
+        search_pattern,
+        search_pattern
+    ))
+
+    results = cursor.fetchall()
+
+    connection.close()
 
     if len(results) == 0:
         print(f"\nNo notes found matching '{search_term}'.")
@@ -111,18 +189,18 @@ def search_notes(notes):
 
     print(f"\nFound {len(results)} matching note(s).")
 
-    for index, note in enumerate(results, start=1):
-        display_note(note, index)
+    for note in results:
+        display_note(note)
 
 
 def main():
-    notes = []
+    create_database()
 
     print("=" * 50)
     print("INTEL NOTES MANAGER")
     print("=" * 50)
     print("Intelligence Note Management System")
-    print("System initialized successfully.")
+    print("Database initialized successfully.")
 
     while True:
         display_menu()
@@ -130,16 +208,13 @@ def main():
         choice = input("Select an option: ")
 
         if choice == "1":
-            note = create_note()
-            notes.append(note)
-
-            print(f"Total notes in session: {len(notes)}")
+            create_note()
 
         elif choice == "2":
-            view_notes(notes)
+            view_notes()
 
         elif choice == "3":
-            search_notes(notes)
+            search_notes()
 
         elif choice == "4":
             print("\nExiting Intel Notes Manager.")
