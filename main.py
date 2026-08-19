@@ -35,7 +35,9 @@ def display_menu():
     print("1. Create Intelligence Note")
     print("2. View Intelligence Notes")
     print("3. Search Intelligence Notes")
-    print("4. Exit")
+    print("4. Edit Intelligence Note")
+    print("5. Delete Intelligence Note")
+    print("6. Exit")
     print("=" * 50)
 
 
@@ -106,6 +108,23 @@ def display_note(note):
     print(f"Source Reliability: {note[8]}")
     print(f"Information Credibility: {note[9]}")
     print(f"Note: {note[10]}")
+
+
+def get_note_by_id(note_id):
+    connection = sqlite3.connect(DATABASE_NAME)
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        SELECT *
+        FROM notes
+        WHERE id = ?
+    """, (note_id,))
+
+    note = cursor.fetchone()
+
+    connection.close()
+
+    return note
 
 
 def view_notes():
@@ -193,6 +212,117 @@ def search_notes():
         display_note(note)
 
 
+def edit_note():
+    print("\n" + "=" * 50)
+    print("EDIT INTELLIGENCE NOTE")
+    print("=" * 50)
+
+    try:
+        note_id = int(input("Enter Note ID to edit: "))
+    except ValueError:
+        print("\nInvalid Note ID.")
+        return
+
+    note = get_note_by_id(note_id)
+
+    if note is None:
+        print("\nNo note found with that ID.")
+        return
+
+    print("\nCurrent note:")
+    display_note(note)
+
+    print("\nPress Enter to keep the current value.")
+
+    title = input(f"Title [{note[1]}]: ").strip()
+    date = input(f"Date [{note[2]}]: ").strip()
+    source = input(f"Source [{note[3]}]: ").strip()
+    classification = input(f"Classification [{note[4]}]: ").strip()
+    discipline = input(f"INT Discipline [{note[5]}]: ").strip()
+    location = input(f"Location [{note[6]}]: ").strip()
+    tags = input(f"Tags [{note[7]}]: ").strip()
+    reliability = input(f"Source Reliability [{note[8]}]: ").strip()
+    credibility = input(f"Information Credibility [{note[9]}]: ").strip()
+    body = input(f"Note [{note[10]}]: ").strip()
+
+    updated_values = (
+        title if title else note[1],
+        date if date else note[2],
+        source if source else note[3],
+        classification if classification else note[4],
+        discipline if discipline else note[5],
+        location if location else note[6],
+        tags if tags else note[7],
+        reliability if reliability else note[8],
+        credibility if credibility else note[9],
+        body if body else note[10],
+        note_id
+    )
+
+    connection = sqlite3.connect(DATABASE_NAME)
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        UPDATE notes
+        SET title = ?,
+            date = ?,
+            source = ?,
+            classification = ?,
+            discipline = ?,
+            location = ?,
+            tags = ?,
+            reliability = ?,
+            credibility = ?,
+            body = ?
+        WHERE id = ?
+    """, updated_values)
+
+    connection.commit()
+    connection.close()
+
+    print("\nIntelligence note updated successfully.")
+
+
+def delete_note():
+    print("\n" + "=" * 50)
+    print("DELETE INTELLIGENCE NOTE")
+    print("=" * 50)
+
+    try:
+        note_id = int(input("Enter Note ID to delete: "))
+    except ValueError:
+        print("\nInvalid Note ID.")
+        return
+
+    note = get_note_by_id(note_id)
+
+    if note is None:
+        print("\nNo note found with that ID.")
+        return
+
+    print("\nNote selected for deletion:")
+    display_note(note)
+
+    confirmation = input("\nDelete this note? (y/n): ").strip().lower()
+
+    if confirmation != "y":
+        print("\nDeletion cancelled.")
+        return
+
+    connection = sqlite3.connect(DATABASE_NAME)
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        DELETE FROM notes
+        WHERE id = ?
+    """, (note_id,))
+
+    connection.commit()
+    connection.close()
+
+    print("\nIntelligence note deleted successfully.")
+
+
 def main():
     create_database()
 
@@ -217,11 +347,17 @@ def main():
             search_notes()
 
         elif choice == "4":
+            edit_note()
+
+        elif choice == "5":
+            delete_note()
+
+        elif choice == "6":
             print("\nExiting Intel Notes Manager.")
             break
 
         else:
-            print("\nInvalid selection. Please enter 1, 2, 3, or 4.")
+            print("\nInvalid selection. Please enter 1 through 6.")
 
 
 if __name__ == "__main__":
