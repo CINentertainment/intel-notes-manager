@@ -1,8 +1,13 @@
 import sqlite3
+from datetime import datetime
 
 
 DATABASE_NAME = "intel_notes.db"
 
+
+# --------------------------------------------------
+# DATABASE
+# --------------------------------------------------
 
 def create_database():
     connection = sqlite3.connect(DATABASE_NAME)
@@ -28,36 +33,239 @@ def create_database():
     connection.close()
 
 
+# --------------------------------------------------
+# VALIDATION HELPERS
+# --------------------------------------------------
+
+def get_required_input(prompt):
+    while True:
+        value = input(prompt).strip()
+
+        if value:
+            return value
+
+        print("This field cannot be blank.")
+
+
+def get_valid_date(prompt, allow_blank=False, current_value=None):
+    while True:
+        value = input(prompt).strip()
+
+        if not value:
+            if allow_blank:
+                return current_value
+            print("Date cannot be blank.")
+            continue
+
+        try:
+            parsed_date = datetime.strptime(value, "%Y-%m-%d")
+            return parsed_date.strftime("%Y-%m-%d")
+        except ValueError:
+            print("Invalid date. Use YYYY-MM-DD, for example 2026-09-15.")
+
+
+def get_classification(current_value=None):
+    options = {
+        "1": "UNCLASSIFIED",
+        "2": "CUI",
+        "3": "CONFIDENTIAL",
+        "4": "SECRET",
+        "5": "TOP SECRET"
+    }
+
+    while True:
+        print("\nClassification:")
+        print("1. UNCLASSIFIED")
+        print("2. CUI")
+        print("3. CONFIDENTIAL")
+        print("4. SECRET")
+        print("5. TOP SECRET")
+
+        if current_value is not None:
+            choice = input(
+                f"Select classification [{current_value}] "
+                "(Enter to keep current): "
+            ).strip()
+
+            if not choice:
+                return current_value
+        else:
+            choice = input("Select classification (1-5): ").strip()
+
+        if choice in options:
+            return options[choice]
+
+        print("Invalid selection. Please enter 1 through 5.")
+
+
+def get_discipline(current_value=None):
+    options = {
+        "1": "HUMINT",
+        "2": "SIGINT",
+        "3": "GEOINT",
+        "4": "OSINT",
+        "5": "MASINT",
+        "6": "ALL-SOURCE"
+    }
+
+    while True:
+        print("\nINT Discipline:")
+        print("1. HUMINT")
+        print("2. SIGINT")
+        print("3. GEOINT")
+        print("4. OSINT")
+        print("5. MASINT")
+        print("6. ALL-SOURCE")
+
+        if current_value is not None:
+            choice = input(
+                f"Select INT discipline [{current_value}] "
+                "(Enter to keep current): "
+            ).strip()
+
+            if not choice:
+                return current_value
+        else:
+            choice = input("Select INT discipline (1-6): ").strip()
+
+        if choice in options:
+            return options[choice]
+
+        print("Invalid selection. Please enter 1 through 6.")
+
+
+def get_reliability(current_value=None):
+    descriptions = {
+        "A": "Completely Reliable",
+        "B": "Usually Reliable",
+        "C": "Fairly Reliable",
+        "D": "Not Usually Reliable",
+        "E": "Unreliable",
+        "F": "Reliability Cannot Be Judged"
+    }
+
+    while True:
+        print("\nSource Reliability:")
+        for code, description in descriptions.items():
+            print(f"{code} - {description}")
+
+        if current_value is not None:
+            value = input(
+                f"Source reliability [{current_value}] "
+                "(Enter to keep current): "
+            ).strip().upper()
+
+            if not value:
+                return current_value
+        else:
+            value = input("Source reliability (A-F): ").strip().upper()
+
+        if value in descriptions:
+            return value
+
+        print("Invalid reliability rating. Please enter A through F.")
+
+
+def get_credibility(current_value=None):
+    descriptions = {
+        "1": "Confirmed by Other Sources",
+        "2": "Probably True",
+        "3": "Possibly True",
+        "4": "Doubtful",
+        "5": "Improbable",
+        "6": "Truth Cannot Be Judged"
+    }
+
+    while True:
+        print("\nInformation Credibility:")
+        for code, description in descriptions.items():
+            print(f"{code} - {description}")
+
+        if current_value is not None:
+            value = input(
+                f"Information credibility [{current_value}] "
+                "(Enter to keep current): "
+            ).strip()
+
+            if not value:
+                return current_value
+        else:
+            value = input("Information credibility (1-6): ").strip()
+
+        if value in descriptions:
+            return value
+
+        print("Invalid credibility rating. Please enter 1 through 6.")
+
+
+def reliability_description(code):
+    descriptions = {
+        "A": "Completely Reliable",
+        "B": "Usually Reliable",
+        "C": "Fairly Reliable",
+        "D": "Not Usually Reliable",
+        "E": "Unreliable",
+        "F": "Reliability Cannot Be Judged"
+    }
+
+    return descriptions.get(code, "Unknown")
+
+
+def credibility_description(code):
+    descriptions = {
+        "1": "Confirmed by Other Sources",
+        "2": "Probably True",
+        "3": "Possibly True",
+        "4": "Doubtful",
+        "5": "Improbable",
+        "6": "Truth Cannot Be Judged"
+    }
+
+    return descriptions.get(code, "Unknown")
+
+
+# --------------------------------------------------
+# MENU
+# --------------------------------------------------
+
 def display_menu():
-    print("\n" + "=" * 50)
+    print("\n" + "=" * 60)
     print("INTEL NOTES MANAGER")
-    print("=" * 50)
+    print("=" * 60)
     print("1. Create Intelligence Note")
     print("2. View Intelligence Notes")
     print("3. Search Intelligence Notes")
     print("4. Edit Intelligence Note")
     print("5. Delete Intelligence Note")
     print("6. Exit")
-    print("=" * 50)
+    print("=" * 60)
 
+
+# --------------------------------------------------
+# CREATE
+# --------------------------------------------------
 
 def create_note():
-    print("\n" + "=" * 50)
+    print("\n" + "=" * 60)
     print("CREATE INTELLIGENCE NOTE")
-    print("=" * 50)
+    print("=" * 60)
 
-    title = input("Title: ")
-    date = input("Date: ")
-    source = input("Source: ")
-    classification = input("Classification: ")
-    discipline = input("INT Discipline: ")
-    location = input("Location: ")
-    tags = input("Tags: ")
-    reliability = input("Source Reliability (A-F): ")
-    credibility = input("Information Credibility (1-6): ")
+    title = get_required_input("Title: ")
+    date = get_valid_date("Date (YYYY-MM-DD): ")
+
+    source = input("Source: ").strip()
+
+    classification = get_classification()
+    discipline = get_discipline()
+
+    location = input("Location: ").strip()
+    tags = input("Tags: ").strip()
+
+    reliability = get_reliability()
+    credibility = get_credibility()
 
     print("\nEnter intelligence note:")
-    body = input("> ")
+    body = get_required_input("> ")
 
     connection = sqlite3.connect(DATABASE_NAME)
     cursor = connection.cursor()
@@ -90,14 +298,24 @@ def create_note():
     ))
 
     connection.commit()
+
+    note_id = cursor.lastrowid
+
     connection.close()
 
     print("\nIntelligence note saved successfully.")
+    print(f"Assigned Note ID: {note_id}")
 
+
+# --------------------------------------------------
+# DISPLAY
+# --------------------------------------------------
 
 def display_note(note):
-    print(f"\nNote ID: {note[0]}")
-    print("-" * 50)
+    print("\n" + "-" * 60)
+    print(f"NOTE ID: {note[0]}")
+    print("-" * 60)
+
     print(f"Title: {note[1]}")
     print(f"Date: {note[2]}")
     print(f"Source: {note[3]}")
@@ -105,10 +323,26 @@ def display_note(note):
     print(f"INT Discipline: {note[5]}")
     print(f"Location: {note[6]}")
     print(f"Tags: {note[7]}")
-    print(f"Source Reliability: {note[8]}")
-    print(f"Information Credibility: {note[9]}")
-    print(f"Note: {note[10]}")
 
+    print(
+        f"Source Reliability: "
+        f"{note[8]} - {reliability_description(note[8])}"
+    )
+
+    print(
+        f"Information Credibility: "
+        f"{note[9]} - {credibility_description(note[9])}"
+    )
+
+    print("-" * 60)
+    print("Intelligence Note:")
+    print(note[10])
+    print("-" * 60)
+
+
+# --------------------------------------------------
+# RETRIEVE NOTE
+# --------------------------------------------------
 
 def get_note_by_id(note_id):
     connection = sqlite3.connect(DATABASE_NAME)
@@ -127,6 +361,10 @@ def get_note_by_id(note_id):
     return note
 
 
+# --------------------------------------------------
+# VIEW
+# --------------------------------------------------
+
 def view_notes():
     connection = sqlite3.connect(DATABASE_NAME)
     cursor = connection.cursor()
@@ -141,13 +379,13 @@ def view_notes():
 
     connection.close()
 
-    if len(notes) == 0:
+    if not notes:
         print("\nNo intelligence notes found.")
         return
 
-    print("\n" + "=" * 50)
+    print("\n" + "=" * 60)
     print("INTELLIGENCE NOTES")
-    print("=" * 50)
+    print("=" * 60)
 
     for note in notes:
         display_note(note)
@@ -155,10 +393,14 @@ def view_notes():
     print(f"\nTotal notes: {len(notes)}")
 
 
+# --------------------------------------------------
+# SEARCH
+# --------------------------------------------------
+
 def search_notes():
-    print("\n" + "=" * 50)
+    print("\n" + "=" * 60)
     print("SEARCH INTELLIGENCE NOTES")
-    print("=" * 50)
+    print("=" * 60)
 
     search_term = input("Enter search term: ").strip()
 
@@ -202,7 +444,7 @@ def search_notes():
 
     connection.close()
 
-    if len(results) == 0:
+    if not results:
         print(f"\nNo notes found matching '{search_term}'.")
         return
 
@@ -212,13 +454,17 @@ def search_notes():
         display_note(note)
 
 
+# --------------------------------------------------
+# EDIT
+# --------------------------------------------------
+
 def edit_note():
-    print("\n" + "=" * 50)
+    print("\n" + "=" * 60)
     print("EDIT INTELLIGENCE NOTE")
-    print("=" * 50)
+    print("=" * 60)
 
     try:
-        note_id = int(input("Enter Note ID to edit: "))
+        note_id = int(input("Enter Note ID to edit: ").strip())
     except ValueError:
         print("\nInvalid Note ID.")
         return
@@ -235,29 +481,41 @@ def edit_note():
     print("\nPress Enter to keep the current value.")
 
     title = input(f"Title [{note[1]}]: ").strip()
-    date = input(f"Date [{note[2]}]: ").strip()
+
+    if not title:
+        title = note[1]
+
+    date = get_valid_date(
+        f"Date [{note[2]}] (YYYY-MM-DD): ",
+        allow_blank=True,
+        current_value=note[2]
+    )
+
     source = input(f"Source [{note[3]}]: ").strip()
-    classification = input(f"Classification [{note[4]}]: ").strip()
-    discipline = input(f"INT Discipline [{note[5]}]: ").strip()
+
+    if not source:
+        source = note[3]
+
+    classification = get_classification(note[4])
+    discipline = get_discipline(note[5])
+
     location = input(f"Location [{note[6]}]: ").strip()
+
+    if not location:
+        location = note[6]
+
     tags = input(f"Tags [{note[7]}]: ").strip()
-    reliability = input(f"Source Reliability [{note[8]}]: ").strip()
-    credibility = input(f"Information Credibility [{note[9]}]: ").strip()
+
+    if not tags:
+        tags = note[7]
+
+    reliability = get_reliability(note[8])
+    credibility = get_credibility(note[9])
+
     body = input(f"Note [{note[10]}]: ").strip()
 
-    updated_values = (
-        title if title else note[1],
-        date if date else note[2],
-        source if source else note[3],
-        classification if classification else note[4],
-        discipline if discipline else note[5],
-        location if location else note[6],
-        tags if tags else note[7],
-        reliability if reliability else note[8],
-        credibility if credibility else note[9],
-        body if body else note[10],
-        note_id
-    )
+    if not body:
+        body = note[10]
 
     connection = sqlite3.connect(DATABASE_NAME)
     cursor = connection.cursor()
@@ -275,7 +533,19 @@ def edit_note():
             credibility = ?,
             body = ?
         WHERE id = ?
-    """, updated_values)
+    """, (
+        title,
+        date,
+        source,
+        classification,
+        discipline,
+        location,
+        tags,
+        reliability,
+        credibility,
+        body,
+        note_id
+    ))
 
     connection.commit()
     connection.close()
@@ -283,13 +553,17 @@ def edit_note():
     print("\nIntelligence note updated successfully.")
 
 
+# --------------------------------------------------
+# DELETE
+# --------------------------------------------------
+
 def delete_note():
-    print("\n" + "=" * 50)
+    print("\n" + "=" * 60)
     print("DELETE INTELLIGENCE NOTE")
-    print("=" * 50)
+    print("=" * 60)
 
     try:
-        note_id = int(input("Enter Note ID to delete: "))
+        note_id = int(input("Enter Note ID to delete: ").strip())
     except ValueError:
         print("\nInvalid Note ID.")
         return
@@ -303,9 +577,11 @@ def delete_note():
     print("\nNote selected for deletion:")
     display_note(note)
 
-    confirmation = input("\nDelete this note? (y/n): ").strip().lower()
+    confirmation = input(
+        "\nDelete this note? Type YES to confirm: "
+    ).strip().upper()
 
-    if confirmation != "y":
+    if confirmation != "YES":
         print("\nDeletion cancelled.")
         return
 
@@ -323,19 +599,23 @@ def delete_note():
     print("\nIntelligence note deleted successfully.")
 
 
+# --------------------------------------------------
+# MAIN
+# --------------------------------------------------
+
 def main():
     create_database()
 
-    print("=" * 50)
+    print("=" * 60)
     print("INTEL NOTES MANAGER")
-    print("=" * 50)
+    print("=" * 60)
     print("Intelligence Note Management System")
     print("Database initialized successfully.")
 
     while True:
         display_menu()
 
-        choice = input("Select an option: ")
+        choice = input("Select an option: ").strip()
 
         if choice == "1":
             create_note()
