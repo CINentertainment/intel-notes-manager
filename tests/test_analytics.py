@@ -57,7 +57,7 @@ class TestAnalytics(unittest.TestCase):
                 "CUI",
                 "HUMINT",
                 "San Antonio",
-                "training, exercise",
+                "Training, exercise",
                 "B",
                 "2",
                 "Additional fictional HUMINT reporting."
@@ -81,7 +81,7 @@ class TestAnalytics(unittest.TestCase):
                 "UNCLASSIFIED",
                 "OSINT",
                 "San Antonio",
-                "cyber, training",
+                "cyber, TRAINING",
                 "C",
                 "3",
                 "Fictional OSINT reporting."
@@ -165,6 +165,37 @@ class TestAnalytics(unittest.TestCase):
             ("San Antonio", 2)
         )
 
+    def test_get_tag_distribution(self):
+        results = analytics.get_tag_distribution()
+
+        distribution = dict(results)
+
+        self.assertEqual(distribution["training"], 4)
+        self.assertEqual(distribution["border"], 1)
+        self.assertEqual(distribution["exercise"], 1)
+        self.assertEqual(distribution["imagery"], 1)
+        self.assertEqual(distribution["cyber"], 1)
+
+    def test_tag_distribution_normalizes_case(self):
+        results = analytics.get_tag_distribution()
+
+        tag_names = [
+            tag
+            for tag, count in results
+        ]
+
+        self.assertIn("training", tag_names)
+        self.assertNotIn("Training", tag_names)
+        self.assertNotIn("TRAINING", tag_names)
+
+    def test_tag_distribution_orders_by_count(self):
+        results = analytics.get_tag_distribution()
+
+        self.assertEqual(
+            results[0],
+            ("training", 4)
+        )
+
     @patch("builtins.print")
     def test_display_analytics(self, mock_print):
         analytics.display_analytics()
@@ -196,6 +227,11 @@ class TestAnalytics(unittest.TestCase):
 
         self.assertIn(
             "TOP LOCATIONS",
+            printed_output
+        )
+
+        self.assertIn(
+            "TOP TAGS",
             printed_output
         )
 

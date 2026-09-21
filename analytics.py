@@ -1,3 +1,5 @@
+from collections import Counter
+
 import database
 
 
@@ -134,6 +136,46 @@ def get_location_distribution():
 
 
 # ============================================================
+# TAG DISTRIBUTION
+# ============================================================
+
+def get_tag_distribution():
+    connection = database.get_connection()
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        SELECT tags
+        FROM notes
+        WHERE tags IS NOT NULL
+          AND TRIM(tags) != ''
+    """)
+
+    rows = cursor.fetchall()
+
+    connection.close()
+
+    tag_counter = Counter()
+
+    for row in rows:
+        tag_string = row[0]
+
+        tags = tag_string.split(",")
+
+        for tag in tags:
+            normalized_tag = tag.strip().lower()
+
+            if normalized_tag:
+                tag_counter[normalized_tag] += 1
+
+    results = sorted(
+        tag_counter.items(),
+        key=lambda item: (-item[1], item[0])
+    )
+
+    return results
+
+
+# ============================================================
 # DISPLAY DISTRIBUTION
 # ============================================================
 
@@ -191,6 +233,11 @@ def display_analytics():
     display_distribution(
         "TOP LOCATIONS",
         get_location_distribution()
+    )
+
+    display_distribution(
+        "TOP TAGS",
+        get_tag_distribution()
     )
 
     print("\n" + "=" * 60)
