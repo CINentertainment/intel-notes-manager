@@ -1,4 +1,4 @@
-from database import get_connection
+import database
 
 from validation import (
     credibility_description,
@@ -61,7 +61,7 @@ def display_results(results):
 # ============================================================
 
 def get_note_by_id(note_id):
-    connection = get_connection()
+    connection = database.get_connection()
     cursor = connection.cursor()
 
     cursor.execute("""
@@ -103,7 +103,7 @@ def create_note():
     print("\nEnter intelligence note:")
     body = get_required_input("> ")
 
-    connection = get_connection()
+    connection = database.get_connection()
     cursor = connection.cursor()
 
     cursor.execute("""
@@ -148,7 +148,7 @@ def create_note():
 # ============================================================
 
 def view_notes():
-    connection = get_connection()
+    connection = database.get_connection()
     cursor = connection.cursor()
 
     cursor.execute("""
@@ -251,7 +251,7 @@ def edit_note():
     if not body:
         body = note[10]
 
-    connection = get_connection()
+    connection = database.get_connection()
     cursor = connection.cursor()
 
     cursor.execute("""
@@ -322,7 +322,7 @@ def delete_note():
         print("\nDeletion cancelled.")
         return
 
-    connection = get_connection()
+    connection = database.get_connection()
     cursor = connection.cursor()
 
     cursor.execute("""
