@@ -148,6 +148,23 @@ class TestAnalytics(unittest.TestCase):
         self.assertEqual(distribution["2"], 2)
         self.assertEqual(distribution["3"], 1)
 
+    def test_get_location_distribution(self):
+        results = analytics.get_location_distribution()
+
+        distribution = dict(results)
+
+        self.assertEqual(distribution["San Antonio"], 2)
+        self.assertEqual(distribution["Mexico City"], 1)
+        self.assertEqual(distribution["Taipei"], 1)
+
+    def test_location_distribution_orders_by_count(self):
+        results = analytics.get_location_distribution()
+
+        self.assertEqual(
+            results[0],
+            ("San Antonio", 2)
+        )
+
     @patch("builtins.print")
     def test_display_analytics(self, mock_print):
         analytics.display_analytics()
@@ -174,6 +191,11 @@ class TestAnalytics(unittest.TestCase):
 
         self.assertIn(
             "CLASSIFICATION DISTRIBUTION",
+            printed_output
+        )
+
+        self.assertIn(
+            "TOP LOCATIONS",
             printed_output
         )
 

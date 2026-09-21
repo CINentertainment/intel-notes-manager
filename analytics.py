@@ -1,6 +1,10 @@
 import database
 
 
+# ============================================================
+# TOTAL NOTES
+# ============================================================
+
 def get_total_notes():
     connection = database.get_connection()
     cursor = connection.cursor()
@@ -16,6 +20,10 @@ def get_total_notes():
 
     return total
 
+
+# ============================================================
+# INT DISCIPLINE DISTRIBUTION
+# ============================================================
 
 def get_discipline_distribution():
     connection = database.get_connection()
@@ -35,6 +43,10 @@ def get_discipline_distribution():
     return results
 
 
+# ============================================================
+# CLASSIFICATION DISTRIBUTION
+# ============================================================
+
 def get_classification_distribution():
     connection = database.get_connection()
     cursor = connection.cursor()
@@ -52,6 +64,10 @@ def get_classification_distribution():
 
     return results
 
+
+# ============================================================
+# SOURCE RELIABILITY DISTRIBUTION
+# ============================================================
 
 def get_reliability_distribution():
     connection = database.get_connection()
@@ -71,6 +87,10 @@ def get_reliability_distribution():
     return results
 
 
+# ============================================================
+# INFORMATION CREDIBILITY DISTRIBUTION
+# ============================================================
+
 def get_credibility_distribution():
     connection = database.get_connection()
     cursor = connection.cursor()
@@ -89,6 +109,34 @@ def get_credibility_distribution():
     return results
 
 
+# ============================================================
+# LOCATION DISTRIBUTION
+# ============================================================
+
+def get_location_distribution():
+    connection = database.get_connection()
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        SELECT location, COUNT(*)
+        FROM notes
+        WHERE location IS NOT NULL
+          AND TRIM(location) != ''
+        GROUP BY location
+        ORDER BY COUNT(*) DESC, location
+    """)
+
+    results = cursor.fetchall()
+
+    connection.close()
+
+    return results
+
+
+# ============================================================
+# DISPLAY DISTRIBUTION
+# ============================================================
+
 def display_distribution(title, results):
     print(f"\n{title}")
     print("-" * 60)
@@ -101,6 +149,10 @@ def display_distribution(title, results):
         category_name = category if category else "NOT SPECIFIED"
         print(f"{category_name}: {count}")
 
+
+# ============================================================
+# DISPLAY ANALYTICS DASHBOARD
+# ============================================================
 
 def display_analytics():
     print("\n" + "=" * 60)
@@ -134,6 +186,11 @@ def display_analytics():
     display_distribution(
         "INFORMATION CREDIBILITY DISTRIBUTION",
         get_credibility_distribution()
+    )
+
+    display_distribution(
+        "TOP LOCATIONS",
+        get_location_distribution()
     )
 
     print("\n" + "=" * 60)
