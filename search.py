@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from database import get_connection
+import database
 from notes import display_results
 
 from validation import (
@@ -27,7 +27,7 @@ def keyword_search():
         print("\nSearch term cannot be empty.")
         return
 
-    connection = get_connection()
+    connection = database.get_connection()
     cursor = connection.cursor()
 
     search_pattern = f"%{search_term}%"
@@ -76,7 +76,7 @@ def filter_by_classification():
 
     classification = get_classification()
 
-    connection = get_connection()
+    connection = database.get_connection()
     cursor = connection.cursor()
 
     cursor.execute("""
@@ -103,7 +103,7 @@ def filter_by_discipline():
 
     discipline = get_discipline()
 
-    connection = get_connection()
+    connection = database.get_connection()
     cursor = connection.cursor()
 
     cursor.execute("""
@@ -130,7 +130,7 @@ def filter_by_reliability():
 
     reliability = get_reliability()
 
-    connection = get_connection()
+    connection = database.get_connection()
     cursor = connection.cursor()
 
     cursor.execute("""
@@ -157,7 +157,7 @@ def filter_by_credibility():
 
     credibility = get_credibility()
 
-    connection = get_connection()
+    connection = database.get_connection()
     cursor = connection.cursor()
 
     cursor.execute("""
@@ -194,7 +194,7 @@ def filter_by_date_range():
         print("\nStart date cannot be after end date.")
         return
 
-    connection = get_connection()
+    connection = database.get_connection()
     cursor = connection.cursor()
 
     cursor.execute("""
@@ -228,7 +228,7 @@ def filter_by_location():
         print("\nLocation cannot be empty.")
         return
 
-    connection = get_connection()
+    connection = database.get_connection()
     cursor = connection.cursor()
 
     cursor.execute("""
@@ -361,7 +361,7 @@ def combined_filter():
 
     query += " ORDER BY date DESC, id DESC"
 
-    connection = get_connection()
+    connection = database.get_connection()
     cursor = connection.cursor()
 
     cursor.execute(query, parameters)
