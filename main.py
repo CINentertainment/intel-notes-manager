@@ -1,3 +1,4 @@
+from analytics import display_analytics
 from database import create_database
 
 from notes import (
@@ -24,7 +25,8 @@ def display_menu():
     print("3. Search & Filter Intelligence Notes")
     print("4. Edit Intelligence Note")
     print("5. Delete Intelligence Note")
-    print("6. Exit")
+    print("6. Intelligence Analytics")
+    print("7. Exit")
 
     print("=" * 60)
 
@@ -63,13 +65,16 @@ def main():
             delete_note()
 
         elif choice == "6":
+            display_analytics()
+
+        elif choice == "7":
             print("\nExiting Intel Notes Manager.")
             break
 
         else:
             print(
                 "\nInvalid selection. "
-                "Please enter 1 through 6."
+                "Please enter 1 through 7."
             )
 
 
