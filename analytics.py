@@ -17,7 +17,6 @@ def get_total_notes():
     """)
 
     total = cursor.fetchone()[0]
-
     connection.close()
 
     return total
@@ -39,7 +38,6 @@ def get_discipline_distribution():
     """)
 
     results = cursor.fetchall()
-
     connection.close()
 
     return results
@@ -61,7 +59,6 @@ def get_classification_distribution():
     """)
 
     results = cursor.fetchall()
-
     connection.close()
 
     return results
@@ -83,7 +80,6 @@ def get_reliability_distribution():
     """)
 
     results = cursor.fetchall()
-
     connection.close()
 
     return results
@@ -105,7 +101,6 @@ def get_credibility_distribution():
     """)
 
     results = cursor.fetchall()
-
     connection.close()
 
     return results
@@ -129,7 +124,6 @@ def get_location_distribution():
     """)
 
     results = cursor.fetchall()
-
     connection.close()
 
     return results
@@ -151,14 +145,12 @@ def get_tag_distribution():
     """)
 
     rows = cursor.fetchall()
-
     connection.close()
 
     tag_counter = Counter()
 
     for row in rows:
         tag_string = row[0]
-
         tags = tag_string.split(",")
 
         for tag in tags:
@@ -167,16 +159,39 @@ def get_tag_distribution():
             if normalized_tag:
                 tag_counter[normalized_tag] += 1
 
-    results = sorted(
+    return sorted(
         tag_counter.items(),
         key=lambda item: (-item[1], item[0])
     )
+
+
+# ============================================================
+# MONTHLY REPORTING DISTRIBUTION
+# ============================================================
+
+def get_monthly_distribution():
+    connection = database.get_connection()
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        SELECT
+            SUBSTR(date, 1, 7) AS report_month,
+            COUNT(*)
+        FROM notes
+        WHERE date IS NOT NULL
+          AND TRIM(date) != ''
+        GROUP BY report_month
+        ORDER BY report_month
+    """)
+
+    results = cursor.fetchall()
+    connection.close()
 
     return results
 
 
 # ============================================================
-# DISPLAY DISTRIBUTION
+# DISPLAY STANDARD DISTRIBUTION
 # ============================================================
 
 def display_distribution(title, results):
@@ -190,6 +205,22 @@ def display_distribution(title, results):
     for category, count in results:
         category_name = category if category else "NOT SPECIFIED"
         print(f"{category_name}: {count}")
+
+
+# ============================================================
+# DISPLAY MONTHLY REPORTING
+# ============================================================
+
+def display_monthly_distribution(results):
+    print("\nREPORTING OVER TIME")
+    print("-" * 60)
+
+    if not results:
+        print("No reporting dates available.")
+        return
+
+    for month, count in results:
+        print(f"{month}: {count}")
 
 
 # ============================================================
@@ -238,6 +269,10 @@ def display_analytics():
     display_distribution(
         "TOP TAGS",
         get_tag_distribution()
+    )
+
+    display_monthly_distribution(
+        get_monthly_distribution()
     )
 
     print("\n" + "=" * 60)

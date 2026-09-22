@@ -40,7 +40,7 @@ class TestAnalytics(unittest.TestCase):
         test_notes = [
             (
                 "Fictional HUMINT Report One",
-                "2026-09-01",
+                "2026-08-15",
                 "Source Alpha",
                 "UNCLASSIFIED",
                 "HUMINT",
@@ -76,7 +76,7 @@ class TestAnalytics(unittest.TestCase):
             ),
             (
                 "Fictional OSINT Report",
-                "2026-09-20",
+                "2026-10-20",
                 "Source Delta",
                 "UNCLASSIFIED",
                 "OSINT",
@@ -114,7 +114,6 @@ class TestAnalytics(unittest.TestCase):
 
     def test_get_discipline_distribution(self):
         results = analytics.get_discipline_distribution()
-
         distribution = dict(results)
 
         self.assertEqual(distribution["HUMINT"], 2)
@@ -123,7 +122,6 @@ class TestAnalytics(unittest.TestCase):
 
     def test_get_classification_distribution(self):
         results = analytics.get_classification_distribution()
-
         distribution = dict(results)
 
         self.assertEqual(distribution["UNCLASSIFIED"], 2)
@@ -132,7 +130,6 @@ class TestAnalytics(unittest.TestCase):
 
     def test_get_reliability_distribution(self):
         results = analytics.get_reliability_distribution()
-
         distribution = dict(results)
 
         self.assertEqual(distribution["A"], 1)
@@ -141,7 +138,6 @@ class TestAnalytics(unittest.TestCase):
 
     def test_get_credibility_distribution(self):
         results = analytics.get_credibility_distribution()
-
         distribution = dict(results)
 
         self.assertEqual(distribution["1"], 1)
@@ -150,7 +146,6 @@ class TestAnalytics(unittest.TestCase):
 
     def test_get_location_distribution(self):
         results = analytics.get_location_distribution()
-
         distribution = dict(results)
 
         self.assertEqual(distribution["San Antonio"], 2)
@@ -167,7 +162,6 @@ class TestAnalytics(unittest.TestCase):
 
     def test_get_tag_distribution(self):
         results = analytics.get_tag_distribution()
-
         distribution = dict(results)
 
         self.assertEqual(distribution["training"], 4)
@@ -194,6 +188,26 @@ class TestAnalytics(unittest.TestCase):
         self.assertEqual(
             results[0],
             ("training", 4)
+        )
+
+    def test_get_monthly_distribution(self):
+        results = analytics.get_monthly_distribution()
+        distribution = dict(results)
+
+        self.assertEqual(distribution["2026-08"], 1)
+        self.assertEqual(distribution["2026-09"], 2)
+        self.assertEqual(distribution["2026-10"], 1)
+
+    def test_monthly_distribution_is_chronological(self):
+        results = analytics.get_monthly_distribution()
+
+        self.assertEqual(
+            results,
+            [
+                ("2026-08", 1),
+                ("2026-09", 2),
+                ("2026-10", 1)
+            ]
         )
 
     @patch("builtins.print")
@@ -232,6 +246,11 @@ class TestAnalytics(unittest.TestCase):
 
         self.assertIn(
             "TOP TAGS",
+            printed_output
+        )
+
+        self.assertIn(
+            "REPORTING OVER TIME",
             printed_output
         )
 
