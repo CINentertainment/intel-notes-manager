@@ -1,12 +1,12 @@
 # Intel Notes Manager
 
-Intel Notes Manager is a Python-based command-line application designed to organize, evaluate, search, and manage structured intelligence notes.
+Intel Notes Manager is a Python-based command-line application for organizing, evaluating, searching, analyzing, and reporting structured intelligence notes.
 
-The project combines intelligence-analysis concepts with software development practices by providing a lightweight system for storing intelligence-related information alongside metadata such as intelligence discipline, classification, source reliability, information credibility, location, tags, and reporting dates.
+The project combines intelligence-analysis concepts with software engineering and data-management practices. It provides a lightweight system for storing intelligence-related information alongside structured metadata such as intelligence discipline, classification, source reliability, information credibility, location, tags, and reporting dates.
 
-The application uses Python and SQLite and is organized using a modular architecture to separate database operations, validation, note management, search functionality, and application control.
+The application uses Python and SQLite and follows a modular architecture that separates database operations, validation, note management, search and filtering, analytics, reporting, and application control.
 
-> **Important:** This project is intended for educational and portfolio purposes only. The repository should contain only fictional, simulated, or otherwise unclassified demonstration data. It is not designed or approved for storing classified, controlled, sensitive, proprietary, or operational information.
+> **Important:** This project is intended for educational and portfolio purposes only. It is not designed, accredited, or approved for storing classified, controlled, sensitive, proprietary, operational, or otherwise protected information. All demonstration data should be fictional, simulated, or appropriately sanitized.
 
 ---
 
@@ -20,8 +20,8 @@ Users can:
 - View stored notes
 - Edit existing notes
 - Delete notes with confirmation
-- Assign unique database IDs to records
-- Store notes persistently using SQLite
+- Store records using unique database IDs
+- Persist notes locally using SQLite
 
 ### Structured Intelligence Metadata
 
@@ -30,7 +30,7 @@ Each intelligence note can contain:
 - Title
 - Date
 - Source
-- Classification marking
+- Classification
 - Intelligence discipline
 - Location
 - Tags
@@ -38,9 +38,9 @@ Each intelligence note can contain:
 - Information credibility
 - Note body
 
-### Input Validation
+### Input Validation and Normalization
 
-The application validates and normalizes several fields to improve data consistency.
+The application validates and normalizes structured fields to improve consistency and support reliable searching and analysis.
 
 Supported classification values include:
 
@@ -65,11 +65,15 @@ Dates use the ISO-style format:
 YYYY-MM-DD
 ```
 
-The application also prevents required fields such as the note title and body from being left blank.
+Required fields such as the note title and body cannot be left blank.
 
-### Source Evaluation
+---
 
-Source reliability uses an A-F structure:
+## Source Evaluation
+
+Intel Notes Manager includes structured source reliability and information credibility ratings.
+
+### Source Reliability
 
 | Rating | Description |
 | --- | --- |
@@ -80,7 +84,7 @@ Source reliability uses an A-F structure:
 | E | Unreliable |
 | F | Reliability Cannot Be Judged |
 
-Information credibility uses a 1-6 structure:
+### Information Credibility
 
 | Rating | Description |
 | --- | --- |
@@ -91,13 +95,19 @@ Information credibility uses a 1-6 structure:
 | 5 | Improbable |
 | 6 | Truth Cannot Be Judged |
 
-These values are stored in normalized form to support structured searching and future analytics.
+Ratings are stored in normalized form, allowing the application to perform structured searches and analyze combined source-evaluation pairs such as:
+
+```text
+A1
+B2
+C3
+```
 
 ---
 
 ## Search and Filtering
 
-Intel Notes Manager includes both keyword searching and structured filtering.
+Intel Notes Manager supports both general keyword searches and structured filtering.
 
 Users can search or filter by:
 
@@ -109,9 +119,9 @@ Users can search or filter by:
 - Date range
 - Location
 
-The application also includes a combined intelligence filter that allows multiple criteria to be applied simultaneously.
+The application also provides a combined filter that allows multiple criteria to be applied simultaneously.
 
-For example, a user could search for records matching:
+For example:
 
 ```text
 Classification: UNCLASSIFIED
@@ -121,31 +131,120 @@ Information Credibility: 2
 Location: Example Location
 ```
 
-Dynamic SQL query construction allows optional criteria to be added only when selected by the user.
+Dynamic SQL query construction allows optional criteria to be included only when selected by the user.
+
+All database queries use parameterized SQL statements.
+
+---
+
+## Intelligence Analytics
+
+The application includes an analytics module that summarizes information stored in the intelligence-note database.
+
+Available analytics include:
+
+- Total intelligence notes
+- Intelligence discipline distribution
+- Classification distribution
+- Source reliability distribution
+- Information credibility distribution
+- Combined source-evaluation pairs
+- Top reporting locations
+- Top tags
+- Reporting volume over time
+
+Example:
+
+```text
+============================================================
+INTELLIGENCE ANALYTICS
+============================================================
+
+Total Intelligence Notes: 2
+
+INT DISCIPLINE DISTRIBUTION
+------------------------------------------------------------
+HUMINT: 1
+SIGINT: 1
+
+SOURCE EVALUATION PAIRS
+------------------------------------------------------------
+A1: 1
+B2: 1
+
+REPORTING OVER TIME
+------------------------------------------------------------
+2026-09: 2
+```
+
+The analytics layer is separated from the user interface so analytical functions can be tested and reused independently.
+
+---
+
+## Analytics Report Export
+
+Intel Notes Manager can generate timestamped text reports containing the current analytical summary.
+
+Reports are stored locally in:
+
+```text
+reports/
+```
+
+Example filename:
+
+```text
+intelligence_analytics_2026-09-22_134703.txt
+```
+
+A generated report contains the analytical information available at the time of export, including:
+
+- Total records
+- Intelligence discipline distribution
+- Classification distribution
+- Source reliability distribution
+- Information credibility distribution
+- Source-evaluation pairs
+- Top locations
+- Top tags
+- Reporting activity over time
+
+Generated reports are excluded from Git version control.
 
 ---
 
 ## Project Architecture
 
-The application uses a modular Python architecture.
+The application uses a modular Python architecture with separation of concerns between major application functions.
 
 ```text
 intel-notes-manager/
 │
-├── main.py
+├── tests/
+│   ├── test_analytics.py
+│   ├── test_database.py
+│   ├── test_notes.py
+│   ├── test_reporting.py
+│   ├── test_search.py
+│   └── test_validation.py
+│
+├── analytics.py
 ├── database.py
-├── validation.py
+├── main.py
 ├── notes.py
+├── reporting.py
 ├── search.py
-├── intel_notes.db
+├── validation.py
 ├── .gitignore
-├── README.md
-└── LICENSE
+├── LICENSE
+└── README.md
 ```
+
+Runtime files such as the SQLite database, generated reports, and Python cache files are not part of the tracked application source.
 
 ### `main.py`
 
-Provides the application's entry point and primary menu system.
+Provides the application entry point and primary menu system. It coordinates the individual application modules.
 
 ### `database.py`
 
@@ -153,7 +252,8 @@ Handles:
 
 - SQLite database initialization
 - Database connections
-- Creation of the notes table
+- Notes-table creation
+- Database configuration
 
 ### `validation.py`
 
@@ -175,7 +275,7 @@ Handles core CRUD operations:
 - Update
 - Delete
 
-It also provides standardized display functions for intelligence records.
+It also provides standardized display functionality for intelligence records.
 
 ### `search.py`
 
@@ -188,19 +288,57 @@ Handles:
 - Combined multi-field searches
 - Dynamic SQL query construction
 
+### `analytics.py`
+
+Handles analytical queries and aggregation, including:
+
+- Record totals
+- Discipline distribution
+- Classification distribution
+- Reliability distribution
+- Credibility distribution
+- Source-evaluation pairs
+- Location frequency
+- Tag frequency
+- Reporting trends over time
+
+### `reporting.py`
+
+Transforms analytical results into persistent report output.
+
+It handles:
+
+- Report formatting
+- Timestamped filenames
+- Report-directory creation
+- Analytics report generation
+- Text-file export
+
+### `tests/`
+
+Contains the automated unit test suite covering:
+
+- Validation
+- Database operations
+- CRUD functionality
+- Search and filtering
+- Analytics
+- Report generation
+
 ---
 
 ## Technologies
 
-The project currently uses:
+Intel Notes Manager uses:
 
 - Python 3
 - SQLite
 - Python standard library
+- `unittest`
 - Git
 - GitHub
 
-No third-party Python packages are currently required.
+No third-party Python packages are required.
 
 ---
 
@@ -208,9 +346,7 @@ No third-party Python packages are currently required.
 
 ### Requirements
 
-Install Python 3 on your system.
-
-Verify the installation:
+Install Python 3 and verify the installation:
 
 ```bash
 python --version
@@ -230,13 +366,11 @@ cd intel-notes-manager
 
 ### Start the Application
 
-Run:
-
 ```bash
 python main.py
 ```
 
-The application will initialize the local SQLite database automatically if one does not already exist.
+The application automatically initializes the local SQLite database if one does not already exist.
 
 ---
 
@@ -253,9 +387,35 @@ INTEL NOTES MANAGER
 3. Search & Filter Intelligence Notes
 4. Edit Intelligence Note
 5. Delete Intelligence Note
-6. Exit
+6. Intelligence Analytics
+7. Export Analytics Report
+8. Exit
 ============================================================
 ```
+
+---
+
+## Running the Automated Tests
+
+The project includes an automated test suite built with Python's `unittest` framework.
+
+From the project root, run:
+
+```bash
+python -m unittest discover -s tests -v
+```
+
+The v1.0 development build contains **53 automated tests** covering the application's database, validation, CRUD, search, analytics, and reporting functionality.
+
+A successful test run ends with:
+
+```text
+Ran 53 tests in ...
+
+OK
+```
+
+Tests use isolated test databases so application data is not modified during testing.
 
 ---
 
@@ -269,13 +429,15 @@ intel_notes.db
 
 The database is created automatically when the application starts.
 
-The local database file is excluded from version control through `.gitignore`. This prevents locally stored records from being uploaded to the repository.
+The database file is excluded from version control through `.gitignore`. This keeps locally stored records out of the public repository.
+
+Generated analytical reports are also excluded from version control.
 
 ---
 
 ## Security and Data Handling
 
-This application is a learning and portfolio project and is **not an accredited or authorized system for sensitive information**.
+Intel Notes Manager is a learning and portfolio project and is **not an accredited or authorized system for sensitive information**.
 
 Do not enter:
 
@@ -286,66 +448,96 @@ Do not enter:
 - Proprietary organizational data
 - Real intelligence reporting requiring an approved information system
 
-Use fictional or sanitized demonstration data when testing the application or presenting the project.
+Use fictional, simulated, or appropriately sanitized data when testing or demonstrating the application.
 
-Classification-related fields are included to demonstrate data modeling and validation concepts. Their presence does not make the application suitable for processing classified information.
+Classification-related fields and intelligence terminology are included to demonstrate domain-specific data modeling, validation, retrieval, and analysis. Their presence does not make the application suitable for processing classified or controlled information.
 
 ---
 
-## Software Development Concepts Demonstrated
+## Software Engineering Concepts Demonstrated
 
 This project demonstrates practical use of:
 
-- Python functions
-- Modules and imports
-- Input validation
+- Python programming
+- Modular application design
+- Functions and imports
+- Separation of concerns
+- Input validation and normalization
 - Exception handling
-- SQLite databases
+- SQLite database management
 - SQL queries
 - Parameterized SQL statements
 - CRUD operations
 - Dynamic query construction
 - Persistent data storage
-- Modular software architecture
-- Separation of concerns
+- Structured search and filtering
+- Data aggregation and analytics
+- File generation and report export
+- Automated unit testing
+- Test isolation
 - Git version control
+- GitHub repository management
+- Runtime-file exclusion with `.gitignore`
 
 ---
 
-## Current Development Status
+## Development Status
 
-The current version supports:
+**Version 1.0 feature set complete.**
+
+The current application supports:
 
 - Persistent SQLite storage
 - Full CRUD functionality
-- Structured metadata
+- Structured intelligence metadata
 - Data validation and normalization
+- Source reliability and information credibility evaluation
 - Keyword searching
-- Individual field filtering
+- Individual structured filters
 - Combined multi-field filtering
+- Intelligence analytics
+- Source-evaluation analytics
+- Location and tag analysis
+- Reporting trends over time
+- Timestamped analytical report export
 - Modular Python architecture
+- Automated test coverage
 
 ---
 
-## Planned Improvements
+## Potential Future Development
 
-Potential future development includes:
+Version 1.0 intentionally focuses on a lightweight, local command-line application. Possible future extensions could include:
 
-- Intelligence statistics and analytics
-- Report generation and export
+- CSV or JSON data interchange
+- Additional analytical visualizations
 - Improved tag management
-- Additional search capabilities
-- Automated testing
-- Logging and error handling
-- Configuration management
+- Logging and configuration management
 - Graphical user interface
-- Data visualization
-- Entity and relationship management
+- Entity and relationship modeling
+- Link analysis
+- More advanced temporal analysis
+- Role-based access controls
+- API-based data ingestion
+
+These capabilities are outside the current v1.0 scope and are not required for the core application.
+
+---
+
+## Portfolio Purpose
+
+Intel Notes Manager was developed as a portfolio project demonstrating the intersection of intelligence-domain knowledge, software development, and structured data analysis.
+
+Rather than modeling intelligence notes as unstructured text alone, the application treats intelligence metadata as structured data that can be validated, queried, filtered, aggregated, and transformed into analytical output.
+
+The project demonstrates an end-to-end development workflow from initial application design and database persistence through modularization, testing, analytics, reporting, version control, and release preparation.
 
 ---
 
 ## Disclaimer
 
-Intel Notes Manager is an independent educational software project. It is not an official U.S. Government, Department of Defense, intelligence community, law enforcement, or military information system.
+Intel Notes Manager is an independent educational software project.
+
+It is not an official U.S. Government, Department of Defense, intelligence community, law enforcement, military, or commercial intelligence information system.
 
 All demonstration data used in the public repository should be fictional, simulated, or appropriately sanitized.
