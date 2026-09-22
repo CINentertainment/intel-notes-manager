@@ -107,6 +107,37 @@ def get_credibility_distribution():
 
 
 # ============================================================
+# SOURCE EVALUATION DISTRIBUTION
+# ============================================================
+
+def get_source_evaluation_distribution():
+    connection = database.get_connection()
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        SELECT reliability, credibility, COUNT(*)
+        FROM notes
+        WHERE reliability IS NOT NULL
+          AND TRIM(reliability) != ''
+          AND credibility IS NOT NULL
+          AND TRIM(credibility) != ''
+        GROUP BY reliability, credibility
+        ORDER BY COUNT(*) DESC, reliability, credibility
+    """)
+
+    rows = cursor.fetchall()
+    connection.close()
+
+    results = []
+
+    for reliability, credibility, count in rows:
+        evaluation = f"{reliability}{credibility}"
+        results.append((evaluation, count))
+
+    return results
+
+
+# ============================================================
 # LOCATION DISTRIBUTION
 # ============================================================
 
@@ -259,6 +290,11 @@ def display_analytics():
     display_distribution(
         "INFORMATION CREDIBILITY DISTRIBUTION",
         get_credibility_distribution()
+    )
+
+    display_distribution(
+        "SOURCE EVALUATION PAIRS",
+        get_source_evaluation_distribution()
     )
 
     display_distribution(

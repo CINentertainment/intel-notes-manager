@@ -144,6 +144,34 @@ class TestAnalytics(unittest.TestCase):
         self.assertEqual(distribution["2"], 2)
         self.assertEqual(distribution["3"], 1)
 
+    def test_get_source_evaluation_distribution(self):
+        results = analytics.get_source_evaluation_distribution()
+        distribution = dict(results)
+
+        self.assertEqual(distribution["B2"], 2)
+        self.assertEqual(distribution["A1"], 1)
+        self.assertEqual(distribution["C3"], 1)
+
+    def test_source_evaluation_orders_by_count(self):
+        results = analytics.get_source_evaluation_distribution()
+
+        self.assertEqual(
+            results[0],
+            ("B2", 2)
+        )
+
+    def test_source_evaluation_combines_codes_correctly(self):
+        results = analytics.get_source_evaluation_distribution()
+
+        evaluation_codes = [
+            evaluation
+            for evaluation, count in results
+        ]
+
+        self.assertIn("A1", evaluation_codes)
+        self.assertIn("B2", evaluation_codes)
+        self.assertIn("C3", evaluation_codes)
+
     def test_get_location_distribution(self):
         results = analytics.get_location_distribution()
         distribution = dict(results)
@@ -236,6 +264,11 @@ class TestAnalytics(unittest.TestCase):
 
         self.assertIn(
             "CLASSIFICATION DISTRIBUTION",
+            printed_output
+        )
+
+        self.assertIn(
+            "SOURCE EVALUATION PAIRS",
             printed_output
         )
 
