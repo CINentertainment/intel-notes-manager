@@ -128,3 +128,46 @@ class IntelligenceNoteResponse(IntelligenceNoteBase):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
+
+
+class DistributionItem(BaseModel):
+    label: str
+    count: int = Field(ge=0)
+
+
+class AnalyticsResponse(BaseModel):
+    total_notes: int = Field(ge=0)
+
+    classification_distribution: list[DistributionItem] = Field(
+        default_factory=list
+    )
+
+    discipline_distribution: list[DistributionItem] = Field(
+        default_factory=list
+    )
+
+    reliability_distribution: list[DistributionItem] = Field(
+        default_factory=list
+    )
+
+    credibility_distribution: list[DistributionItem] = Field(
+        default_factory=list
+    )
+
+    source_evaluation_distribution: list[
+        DistributionItem
+    ] = Field(
+        default_factory=list
+    )
+
+    location_distribution: list[DistributionItem] = Field(
+        default_factory=list
+    )
+
+    tag_distribution: list[DistributionItem] = Field(
+        default_factory=list
+    )
+
+    monthly_distribution: list[DistributionItem] = Field(
+        default_factory=list
+    )

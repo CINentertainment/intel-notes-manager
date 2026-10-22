@@ -384,3 +384,143 @@ def test_dashboard_javascript():
     assert response.status_code == 200
     assert "initializeApplication" in response.text
     assert 'requestJson("/notes")' in response.text
+def test_empty_analytics():
+    response = client.get("/analytics")
+
+    assert response.status_code == 200
+
+    analytics = response.json()
+
+    assert analytics["total_notes"] == 0
+    assert analytics["classification_distribution"] == []
+    assert analytics["discipline_distribution"] == []
+    assert analytics["reliability_distribution"] == []
+    assert analytics["credibility_distribution"] == []
+    assert analytics["source_evaluation_distribution"] == []
+    assert analytics["location_distribution"] == []
+    assert analytics["tag_distribution"] == []
+    assert analytics["monthly_distribution"] == []
+
+
+def test_analytics_with_notes():
+    first_note = sample_note(
+        "First analytics note"
+    )
+
+    second_note = sample_note(
+        "Second analytics note"
+    )
+    second_note.update(
+        {
+            "date": "2026-09-15",
+            "classification": "SECRET",
+            "discipline": "HUMINT",
+            "location": "Austin, Texas",
+            "tags": "facility, source",
+            "reliability": "A",
+            "credibility": "1",
+        }
+    )
+
+    third_note = sample_note(
+        "Third analytics note"
+    )
+    third_note.update(
+        {
+            "classification": "CUI",
+            "tags": "facility, cyber",
+        }
+    )
+
+    for note_data in [
+        first_note,
+        second_note,
+        third_note,
+    ]:
+        response = client.post(
+            "/notes",
+            json=note_data,
+        )
+
+        assert response.status_code == 201
+
+    response = client.get("/analytics")
+
+    assert response.status_code == 200
+
+    analytics = response.json()
+
+    assert analytics["total_notes"] == 3
+
+    classification_counts = {
+        item["label"]: item["count"]
+        for item in analytics[
+            "classification_distribution"
+        ]
+    }
+
+    assert classification_counts == {
+        "UNCLASSIFIED": 1,
+        "SECRET": 1,
+        "CUI": 1,
+    }
+
+    discipline_counts = {
+        item["label"]: item["count"]
+        for item in analytics[
+            "discipline_distribution"
+        ]
+    }
+
+    assert discipline_counts == {
+        "OSINT": 2,
+        "HUMINT": 1,
+    }
+
+    evaluation_counts = {
+        item["label"]: item["count"]
+        for item in analytics[
+            "source_evaluation_distribution"
+        ]
+    }
+
+    assert evaluation_counts == {
+        "B2": 2,
+        "A1": 1,
+    }
+
+    location_counts = {
+        item["label"]: item["count"]
+        for item in analytics[
+            "location_distribution"
+        ]
+    }
+
+    assert location_counts == {
+        "San Antonio, Texas": 2,
+        "Austin, Texas": 1,
+    }
+
+    tag_counts = {
+        item["label"]: item["count"]
+        for item in analytics[
+            "tag_distribution"
+        ]
+    }
+
+    assert tag_counts["facility"] == 3
+    assert tag_counts["cyber"] == 1
+    assert tag_counts["source"] == 1
+    assert tag_counts["surveillance"] == 1
+
+    monthly_counts = {
+        item["label"]: item["count"]
+        for item in analytics[
+            "monthly_distribution"
+        ]
+    }
+
+    assert monthly_counts == {
+        "2026-09": 1,
+        "2026-10": 2,
+    }

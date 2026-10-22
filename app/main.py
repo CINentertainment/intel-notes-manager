@@ -6,7 +6,7 @@ from fastapi.staticfiles import StaticFiles
 from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
-from app import models, schemas
+from app import analytics, models, schemas
 from app.database import Base, engine, get_db
 
 
@@ -76,6 +76,14 @@ def health_check():
         "status": "healthy",
     }
 
+@app.get(
+    "/analytics",
+    response_model=schemas.AnalyticsResponse,
+)
+def get_analytics(
+    database: Session = Depends(get_db),
+):
+    return analytics.build_analytics(database)
 
 @app.post(
     "/notes",

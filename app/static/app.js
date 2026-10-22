@@ -69,6 +69,33 @@ const elements = {
     restrictedNotes: document.querySelector(
         "#restrictedNotes"
     ),
+    refreshAnalyticsButton: document.querySelector(
+    "#refreshAnalyticsButton"
+),
+
+classificationAnalytics: document.querySelector(
+    "#classificationAnalytics"
+),
+
+disciplineAnalytics: document.querySelector(
+    "#disciplineAnalytics"
+),
+
+evaluationAnalytics: document.querySelector(
+    "#evaluationAnalytics"
+),
+
+monthlyAnalytics: document.querySelector(
+    "#monthlyAnalytics"
+),
+
+locationAnalytics: document.querySelector(
+    "#locationAnalytics"
+),
+
+tagAnalytics: document.querySelector(
+    "#tagAnalytics"
+),
 
     noteDetailWorkspace: document.querySelector(
         "#noteDetailWorkspace"
@@ -223,6 +250,115 @@ async function loadStatistics() {
     } catch (error) {
         showToast(
             `Unable to load statistics: ${error.message}`,
+            true
+        );
+    }
+}
+
+function renderDistribution(
+    container,
+    items
+) {
+    if (!items || items.length === 0) {
+        container.innerHTML = `
+            <p class="empty-state">
+                No data available.
+            </p>
+        `;
+
+        return;
+    }
+
+    const maximumCount = Math.max(
+        ...items.map((item) => item.count),
+        1
+    );
+
+    container.innerHTML = items
+        .map((item) => {
+            const percentage = Math.max(
+                (item.count / maximumCount) * 100,
+                3
+            );
+
+            return `
+                <div class="distribution-item">
+                    <div class="distribution-heading">
+                        <span>
+                            ${escapeHtml(item.label)}
+                        </span>
+
+                        <strong>
+                            ${escapeHtml(item.count)}
+                        </strong>
+                    </div>
+
+                    <div class="distribution-bar-track">
+                        <div
+                            class="distribution-bar"
+                            style="width: ${percentage}%"
+                        ></div>
+                    </div>
+                </div>
+            `;
+        })
+        .join("");
+}
+
+
+async function loadAnalytics() {
+    try {
+        const analytics = await requestJson(
+            "/analytics"
+        );
+
+        renderDistribution(
+            elements.classificationAnalytics,
+            analytics.classification_distribution
+        );
+
+        renderDistribution(
+            elements.disciplineAnalytics,
+            analytics.discipline_distribution
+        );
+
+        renderDistribution(
+            elements.evaluationAnalytics,
+            analytics.source_evaluation_distribution
+        );
+
+        renderDistribution(
+            elements.monthlyAnalytics,
+            analytics.monthly_distribution
+        );
+
+        renderDistribution(
+            elements.locationAnalytics,
+            analytics.location_distribution
+        );
+
+        renderDistribution(
+            elements.tagAnalytics,
+            analytics.tag_distribution
+        );
+    } catch (error) {
+        [
+            elements.classificationAnalytics,
+            elements.disciplineAnalytics,
+            elements.evaluationAnalytics,
+            elements.monthlyAnalytics,
+            elements.locationAnalytics,
+            elements.tagAnalytics,
+        ].forEach((container) => {
+            container.innerHTML = `
+                <p class="empty-state">
+                    Analytics unavailable.
+                </p>
+            `;
+        });
+
+        showToast(
+            `Unable to load analytics: ${error.message}`,
             true
         );
     }
@@ -478,7 +614,8 @@ async function saveNote(event) {
 
         await Promise.all([
             loadNotes(),
-            loadStatistics(),
+    loadStatistics(),
+    loadAnalytics(),
         ]);
     } catch (error) {
         showToast(
@@ -669,7 +806,8 @@ async function deleteNote(noteId) {
 
         await Promise.all([
             loadNotes(),
-            loadStatistics(),
+    loadStatistics(),
+    loadAnalytics(),
         ]);
     } catch (error) {
         showToast(
@@ -758,12 +896,22 @@ function registerEventListeners() {
         async () => {
             await Promise.all([
                 loadNotes(),
-                loadStatistics(),
+    loadStatistics(),
+    loadAnalytics(),
             ]);
 
             showToast("Intelligence holdings refreshed.");
         }
     );
+
+    elements.refreshAnalyticsButton.addEventListener(
+    "click",
+    async () => {
+        await loadAnalytics();
+
+        showToast("Analytics refreshed.");
+    }
+);
 
     elements.clearFiltersButton.addEventListener(
         "click",
@@ -813,7 +961,8 @@ async function initializeApplication() {
 
     await Promise.all([
         loadNotes(),
-        loadStatistics(),
+loadStatistics(),
+loadAnalytics(),
     ]);
 }
 
