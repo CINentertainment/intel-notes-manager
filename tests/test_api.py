@@ -358,3 +358,29 @@ def test_reject_null_title_during_update():
     assert response.json() == {
         "detail": "title cannot be null.",
     }
+
+def test_dashboard():
+    response = client.get("/dashboard")
+
+    assert response.status_code == 200
+    assert "Intel Notes Manager" in response.text
+    assert 'id="noteForm"' in response.text
+    assert 'id="noteList"' in response.text
+    assert "/static/styles.css" in response.text
+    assert "/static/app.js" in response.text
+
+
+def test_dashboard_stylesheet():
+    response = client.get("/static/styles.css")
+
+    assert response.status_code == 200
+    assert "--purple:" in response.text
+    assert ".note-card" in response.text
+
+
+def test_dashboard_javascript():
+    response = client.get("/static/app.js")
+
+    assert response.status_code == 200
+    assert "initializeApplication" in response.text
+    assert 'requestJson("/notes")' in response.text

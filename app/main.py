@@ -1,4 +1,8 @@
+from pathlib import Path
+
 from fastapi import Depends, FastAPI, HTTPException, Response, status
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
@@ -8,14 +12,24 @@ from app.database import Base, engine, get_db
 
 Base.metadata.create_all(bind=engine)
 
+BASE_DIR = Path(__file__).resolve().parent
+STATIC_DIR = BASE_DIR / "static"
+
 
 app = FastAPI(
     title="Intel Notes Manager",
     description=(
-        "A structured intelligence note-management API for recording, "
-        "searching, evaluating, and organizing intelligence information."
+        "A structured intelligence note-management application for "
+        "recording, searching, evaluating, and organizing intelligence "
+        "information."
     ),
     version="2.0.0",
+)
+
+app.mount(
+    "/static",
+    StaticFiles(directory=STATIC_DIR),
+    name="static",
 )
 
 
@@ -44,6 +58,16 @@ def read_root():
         "status": "operational",
         "version": "2.0.0",
     }
+
+
+@app.get(
+    "/dashboard",
+    include_in_schema=False,
+)
+def dashboard():
+    return FileResponse(
+        STATIC_DIR / "index.html"
+    )
 
 
 @app.get("/health")
