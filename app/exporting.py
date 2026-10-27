@@ -103,3 +103,20 @@ def build_collection_export(
         record_count=len(records),
         records=records,
     )
+def build_import_data(
+    record: schemas.ExportedIntelligenceNote,
+) -> dict:
+    tags = ", ".join(record.tags) or None
+
+    return {
+        "title": record.title,
+        "date": record.reporting_date,
+        "source": record.source,
+        "classification": record.classification,
+        "discipline": record.discipline,
+        "location": record.location,
+        "tags": tags,
+        "reliability": record.reliability,
+        "credibility": record.credibility,
+        "body": record.narrative,
+    }

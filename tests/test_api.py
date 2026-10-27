@@ -672,3 +672,106 @@ def test_export_all_notes():
     assert export_data["records"][1]["title"] == (
         "First exported note"
     )
+def test_import_exported_note():
+    create_response = client.post(
+        "/notes",
+        json={
+            "title": "Imported Intelligence Note",
+            "date": "2026-10-27",
+            "source": "External reporting",
+            "classification": "UNCLASSIFIED",
+            "discipline": "OSINT",
+            "location": "San Antonio, Texas",
+            "tags": "testing, interoperability",
+            "reliability": "B",
+            "credibility": "2",
+            "body": (
+                "This note verifies the standardized "
+                "JSON import workflow."
+            ),
+        },
+    )
+
+    assert create_response.status_code == 201
+
+    note_id = create_response.json()["id"]
+
+    export_response = client.get(
+        f"/notes/{note_id}/export"
+    )
+
+    assert export_response.status_code == 200
+
+    delete_response = client.delete(
+        f"/notes/{note_id}"
+    )
+
+    assert delete_response.status_code == 204
+
+    import_response = client.post(
+        "/imports/notes",
+        json=export_response.json(),
+    )
+
+    assert import_response.status_code == 201
+
+    imported_note = import_response.json()
+
+    assert imported_note["title"] == (
+        "Imported Intelligence Note"
+    )
+    assert imported_note["date"] == "2026-10-27"
+    assert imported_note["discipline"] == "OSINT"
+    assert imported_note["reliability"] == "B"
+    assert imported_note["credibility"] == "2"
+    assert imported_note["tags"] == (
+        "testing, interoperability"
+    )
+
+
+def test_reject_duplicate_import():
+    create_response = client.post(
+        "/notes",
+        json={
+            "title": "Duplicate Import Test",
+            "date": "2026-10-27",
+            "classification": "UNCLASSIFIED",
+            "discipline": "OSINT",
+            "tags": "duplicate, testing",
+            "reliability": "A",
+            "credibility": "1",
+            "body": "Duplicate import test narrative.",
+        },
+    )
+
+    assert create_response.status_code == 201
+
+    note_id = create_response.json()["id"]
+
+    export_response = client.get(
+        f"/notes/{note_id}/export"
+    )
+
+    assert export_response.status_code == 200
+
+    import_response = client.post(
+        "/imports/notes",
+        json=export_response.json(),
+    )
+
+    assert import_response.status_code == 409
+    assert import_response.json() == {
+        "detail": (
+            "This intelligence note has already "
+            "been imported."
+        )
+    }
+
+
+def test_reject_invalid_import():
+    response = client.post(
+        "/imports/notes",
+        json={},
+    )
+
+    assert response.status_code == 422

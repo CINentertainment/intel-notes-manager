@@ -36,6 +36,13 @@ const elements = {
     refreshButton: document.querySelector(
         "#refreshButton"
     ),
+    importButton: document.querySelector(
+    "#importButton"
+),
+
+importFileInput: document.querySelector(
+    "#importFileInput"
+),
     exportAllButton: document.querySelector(
         "#exportAllButton"
     ),
@@ -284,7 +291,98 @@ async function exportAllNotes() {
         );
     }
 }
+async function importJsonFile(file) {
+    try {
+        const fileContent = await file.text();
+        const parsedData = JSON.parse(fileContent);
 
+        let importPayloads = [];
+
+        if (parsedData.record) {
+            importPayloads = [parsedData];
+        } else if (Array.isArray(parsedData.records)) {
+            importPayloads = parsedData.records.map(
+                (record) => ({
+                    metadata: parsedData.metadata,
+                    record,
+                })
+            );
+        } else {
+            throw new Error(
+                "The selected file is not a valid " +
+                "Intel Notes export."
+            );
+        }
+
+        let importedCount = 0;
+        let duplicateCount = 0;
+
+        for (const importPayload of importPayloads) {
+            try {
+                await requestJson(
+                    "/imports/notes",
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type":
+                                "application/json",
+                        },
+                        body: JSON.stringify(
+                            importPayload
+                        ),
+                    }
+                );
+
+                importedCount += 1;
+            } catch (error) {
+                if (
+                    error.message.includes(
+                        "already been imported"
+                    )
+                ) {
+                    duplicateCount += 1;
+                } else {
+                    throw error;
+                }
+            }
+        }
+
+        await Promise.all([
+            loadNotes(),
+            loadStatistics(),
+            loadAnalytics(),
+        ]);
+
+        if (duplicateCount > 0) {
+            showToast(
+                `${importedCount} note(s) imported; ` +
+                `${duplicateCount} duplicate(s) skipped.`
+            );
+        } else {
+            showToast(
+                `${importedCount} intelligence note(s) imported.`
+            );
+        }
+    } catch (error) {
+        showToast(
+            `Unable to import notes: ${error.message}`,
+            true
+        );
+    }
+}
+
+
+async function handleImportFileChange(event) {
+    const file = event.target.files[0];
+
+    if (!file) {
+        return;
+    }
+
+    await importJsonFile(file);
+
+    event.target.value = "";
+}
 
 function buildFilterQuery() {
     const query = new URLSearchParams();
@@ -1115,6 +1213,17 @@ function registerEventListeners() {
             );
         }
     );
+ elements.importButton.addEventListener(
+    "click",
+    () => {
+        elements.importFileInput.click();
+    }
+);
+
+elements.importFileInput.addEventListener(
+    "change",
+    handleImportFileChange
+);   
 
     elements.exportAllButton.addEventListener(
         "click",

@@ -123,7 +123,64 @@ def export_all_notes(
     return exporting.build_collection_export(
         notes
     )
+@app.post(
+    "/imports/notes",
+    response_model=schemas.IntelligenceNoteResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+def import_note(
+    export_data: schemas.IntelligenceNoteExport,
+    database: Session = Depends(get_db),
+):
+    note_data = exporting.build_import_data(
+        export_data.record
+    )
 
+    duplicate_statement = select(
+        models.IntelligenceNote
+    ).where(
+        models.IntelligenceNote.title
+        == note_data["title"],
+        models.IntelligenceNote.date
+        == note_data["date"],
+        models.IntelligenceNote.source
+        == note_data["source"],
+        models.IntelligenceNote.classification
+        == note_data["classification"],
+        models.IntelligenceNote.discipline
+        == note_data["discipline"],
+        models.IntelligenceNote.location
+        == note_data["location"],
+        models.IntelligenceNote.tags
+        == note_data["tags"],
+        models.IntelligenceNote.reliability
+        == note_data["reliability"],
+        models.IntelligenceNote.credibility
+        == note_data["credibility"],
+        models.IntelligenceNote.body
+        == note_data["body"],
+    )
+
+    duplicate_note = database.scalars(
+        duplicate_statement
+    ).first()
+
+    if duplicate_note is not None:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=(
+                "This intelligence note has already "
+                "been imported."
+            ),
+        )
+
+    note = models.IntelligenceNote(**note_data)
+
+    database.add(note)
+    database.commit()
+    database.refresh(note)
+
+    return note
 @app.get("/health")
 def health_check():
     return {
