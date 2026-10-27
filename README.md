@@ -8,7 +8,7 @@ Intel Notes Manager provides a structured workflow for recording intelligence in
 
 **Version 2.0.0 — Web Application**
 
-Version 2.0 transforms the original command-line application into a browser-based FastAPI application while preserving the original SQLite data structure and command-line source code.
+Version 2.0 transforms the original command-line application into a browser-based FastAPI application while preserving the original SQLite data structure and Version 1 source code.
 
 > Use only fictional, synthetic, public, or otherwise non-sensitive information. This application is not approved for classified information, controlled unclassified information, operational data, personally identifiable information, or other protected records.
 
@@ -16,30 +16,17 @@ Version 2.0 transforms the original command-line application into a browser-base
 
 - Create, view, edit, and delete intelligence notes
 - Search titles, narratives, sources, locations, and tags
-- Filter notes by:
-  - Classification
-  - Intelligence discipline
-  - Source reliability
-  - Information credibility
-  - Location
-  - Reporting-date range
-- Apply structured source-evaluation ratings
-- Review intelligence holdings through dashboard statistics
-- Analyze distributions by:
-  - Classification
-  - Intelligence discipline
-  - Source evaluation
-  - Reporting month
-  - Location
-  - Tags
+- Filter notes by classification, discipline, reliability, credibility, location, and reporting date
+- Apply structured source-reliability and information-credibility ratings
+- Review dashboard statistics and analytical distributions
 - Generate printable individual-note reports
 - Print reports or save them as PDF through the browser
-- Export individual notes as standardized JSON
+- Export individual intelligence notes as standardized JSON
 - Export the complete intelligence-note collection
 - Import individual or collection JSON exports
-- Detect and skip duplicate imports
+- Detect and skip exact duplicate imports
 - Validate API and interoperability data with Pydantic
-- Preserve the original version 1 command-line application
+- Preserve the Version 1 command-line application
 - Store local development data in SQLite
 - Verify application behavior with automated tests
 
@@ -55,10 +42,6 @@ flowchart TD
     F --> G["Export or Exchange"]
 ```
 
-
-Replace that entire section with:
-
-```markdown
 ## Screenshots
 
 ### Intelligence Dashboard
@@ -103,6 +86,11 @@ intel-notes-manager/
 │   ├── models.py
 │   ├── reporting.py
 │   └── schemas.py
+├── docs/
+│   └── screenshots/
+│       ├── dashboard.png
+│       ├── note-details.png
+│       └── note-report.png
 ├── tests/
 │   ├── test_analytics.py
 │   ├── test_api.py
@@ -124,7 +112,7 @@ intel-notes-manager/
 └── requirements.txt
 ```
 
-The Python files in the repository root preserve the original Version 1 command-line application. The `app/` directory contains the Version 2 web application.
+The Python files in the repository root preserve the Version 1 command-line application. The `app/` directory contains the Version 2 web application.
 
 ## Installation
 
@@ -135,21 +123,13 @@ git clone https://github.com/CINentertainment/intel-notes-manager.git
 cd intel-notes-manager
 ```
 
-### 2. Select the Version 2 development branch if needed
-
-Until Version 2 is merged into `main`:
-
-```powershell
-git switch v2-development
-```
-
-### 3. Create a virtual environment
+### 2. Create a virtual environment
 
 ```powershell
 py -m venv .venv
 ```
 
-### 4. Activate the virtual environment
+### 3. Activate the virtual environment
 
 ```powershell
 .\.venv\Scripts\Activate.ps1
@@ -162,7 +142,7 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy RemoteSigned
 .\.venv\Scripts\Activate.ps1
 ```
 
-### 5. Install dependencies
+### 4. Install dependencies
 
 ```powershell
 python -m pip install --upgrade pip
@@ -249,7 +229,7 @@ Version 2 currently contains **81 automated tests** covering:
 
 ## Intelligence-Note Fields
 
-Each note may contain:
+Each intelligence note may contain:
 
 | Field | Purpose |
 |---|---|
@@ -289,7 +269,7 @@ The dashboard provides distributions for:
 - Location
 - Tags
 
-Summary statistics also identify:
+Summary statistics identify:
 
 - Total intelligence notes
 - OSINT notes
@@ -372,7 +352,7 @@ The application version and exchange-schema version are tracked separately. Inte
 | `GET` | `/notes/{note_id}` | Retrieve one note |
 | `PATCH` | `/notes/{note_id}` | Update a note |
 | `DELETE` | `/notes/{note_id}` | Delete a note |
-| `GET` | `/notes/{note_id}/report` | View a printable note report |
+| `GET` | `/notes/{note_id}/report` | View a printable report |
 | `GET` | `/notes/{note_id}/export` | Export one note as JSON |
 | `GET` | `/exports/notes` | Export all notes as JSON |
 | `POST` | `/imports/notes` | Import a standardized JSON note |
@@ -412,7 +392,7 @@ Only fictional, synthetic, public, or otherwise non-sensitive information should
 - Added FastAPI web API
 - Added SQLAlchemy models
 - Added Pydantic request and response validation
-- Added browser-based intelligence dashboard
+- Added a browser-based intelligence dashboard
 - Added CRUD controls
 - Added search and filtering
 - Added dashboard statistics
@@ -462,7 +442,7 @@ These capabilities are outside the Version 2.0.0 local-release scope.
 
 **Version 2.0.0 feature set complete.**
 
-The application is undergoing final documentation, screenshot, smoke-testing, branch-merging, and release preparation.
+The application is undergoing final documentation, smoke testing, branch merging, and release preparation.
 
 ## License
 
