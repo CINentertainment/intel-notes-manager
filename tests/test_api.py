@@ -564,3 +564,111 @@ def test_note_report_for_missing_note():
     assert response.json() == {
         "detail": "Intelligence note not found.",
     }
+def test_export_note():
+    note_data = sample_note(
+        "Exportable intelligence note"
+    )
+    note_data["tags"] = (
+        "Facility, Surveillance, facility, Security"
+    )
+
+    create_response = client.post(
+        "/notes",
+        json=note_data,
+    )
+
+    assert create_response.status_code == 201
+
+    note_id = create_response.json()["id"]
+
+    response = client.get(
+        f"/notes/{note_id}/export"
+    )
+
+    assert response.status_code == 200
+
+    export_data = response.json()
+
+    assert export_data["metadata"]["schema_name"] == (
+        "cin.intelligence-note"
+    )
+
+    assert export_data["metadata"]["schema_version"] == "1.0"
+
+    assert export_data["metadata"]["source_application"] == (
+        "Intel Notes Manager"
+    )
+
+    assert export_data["metadata"]["application_version"] == (
+        "2.0.0"
+    )
+
+    assert export_data["metadata"]["exported_at"]
+
+    record = export_data["record"]
+
+    assert record["record_identifier"] == "INM-000001"
+    assert record["note_id"] == note_id
+    assert record["title"] == (
+        "Exportable intelligence note"
+    )
+    assert record["source_evaluation"] == "B2"
+
+    assert record["tags"] == [
+        "facility",
+        "surveillance",
+        "security",
+    ]
+
+
+def test_export_missing_note():
+    response = client.get("/notes/999/export")
+
+    assert response.status_code == 404
+    assert response.json() == {
+        "detail": "Intelligence note not found.",
+    }
+
+
+def test_export_all_notes():
+    first_note = sample_note(
+        "First exported note"
+    )
+    first_note["date"] = "2026-09-15"
+
+    second_note = sample_note(
+        "Second exported note"
+    )
+    second_note["date"] = "2026-10-22"
+
+    for note_data in [
+        first_note,
+        second_note,
+    ]:
+        response = client.post(
+            "/notes",
+            json=note_data,
+        )
+
+        assert response.status_code == 201
+
+    response = client.get("/exports/notes")
+
+    assert response.status_code == 200
+
+    export_data = response.json()
+
+    assert export_data["metadata"]["schema_name"] == (
+        "cin.intelligence-note"
+    )
+
+    assert export_data["record_count"] == 2
+    assert len(export_data["records"]) == 2
+
+    assert export_data["records"][0]["title"] == (
+        "Second exported note"
+    )
+
+    assert export_data["records"][1]["title"] == (
+        "First exported note"
+    )

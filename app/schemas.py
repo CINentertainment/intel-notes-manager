@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -169,5 +170,56 @@ class AnalyticsResponse(BaseModel):
     )
 
     monthly_distribution: list[DistributionItem] = Field(
+        default_factory=list
+    )
+
+
+class ExportMetadata(BaseModel):
+    schema_name: Literal[
+        "cin.intelligence-note"
+    ] = "cin.intelligence-note"
+
+    schema_version: Literal["1.0"] = "1.0"
+
+    source_application: Literal[
+        "Intel Notes Manager"
+    ] = "Intel Notes Manager"
+
+    application_version: Literal["2.0.0"] = "2.0.0"
+
+    exported_at: datetime
+
+
+class ExportedIntelligenceNote(BaseModel):
+    record_identifier: str
+    note_id: int
+
+    title: str
+    reporting_date: str | None = None
+    source: str | None = None
+
+    classification: Classification | None = None
+    discipline: Discipline | None = None
+
+    location: str | None = None
+    tags: list[str] = Field(default_factory=list)
+
+    reliability: Reliability | None = None
+    credibility: Credibility | None = None
+    source_evaluation: str | None = None
+
+    narrative: str | None = None
+
+
+class IntelligenceNoteExport(BaseModel):
+    metadata: ExportMetadata
+    record: ExportedIntelligenceNote
+
+
+class IntelligenceNoteCollectionExport(BaseModel):
+    metadata: ExportMetadata
+    record_count: int = Field(ge=0)
+
+    records: list[ExportedIntelligenceNote] = Field(
         default_factory=list
     )

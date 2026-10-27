@@ -6,7 +6,7 @@ from fastapi.staticfiles import StaticFiles
 from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
-from app import analytics, models, reporting, schemas
+from app import analytics, exporting, models, reporting, schemas
 from app.database import Base, engine, get_db
 
 
@@ -86,6 +86,42 @@ def note_report(
     return HTMLResponse(
         content=reporting.build_note_report(note),
         status_code=status.HTTP_200_OK,
+    )
+
+@app.get(
+    "/notes/{note_id}/export",
+    response_model=schemas.IntelligenceNoteExport,
+)
+def export_note(
+    note_id: int,
+    database: Session = Depends(get_db),
+):
+    note = get_note_or_404(
+        note_id,
+        database,
+    )
+
+    return exporting.build_note_export(note)
+
+
+@app.get(
+    "/exports/notes",
+    response_model=schemas.IntelligenceNoteCollectionExport,
+)
+def export_all_notes(
+    database: Session = Depends(get_db),
+):
+    statement = select(
+        models.IntelligenceNote
+    ).order_by(
+        models.IntelligenceNote.date.desc(),
+        models.IntelligenceNote.id.desc(),
+    )
+
+    notes = database.scalars(statement).all()
+
+    return exporting.build_collection_export(
+        notes
     )
 
 @app.get("/health")

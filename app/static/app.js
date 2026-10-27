@@ -17,7 +17,9 @@ const elements = {
     noteClassification: document.querySelector(
         "#noteClassification"
     ),
-    noteDiscipline: document.querySelector("#noteDiscipline"),
+    noteDiscipline: document.querySelector(
+        "#noteDiscipline"
+    ),
     noteLocation: document.querySelector("#noteLocation"),
     noteTags: document.querySelector("#noteTags"),
     noteReliability: document.querySelector(
@@ -31,7 +33,12 @@ const elements = {
     cancelEditButton: document.querySelector(
         "#cancelEditButton"
     ),
-    refreshButton: document.querySelector("#refreshButton"),
+    refreshButton: document.querySelector(
+        "#refreshButton"
+    ),
+    exportAllButton: document.querySelector(
+        "#exportAllButton"
+    ),
     clearFiltersButton: document.querySelector(
         "#clearFiltersButton"
     ),
@@ -69,33 +76,28 @@ const elements = {
     restrictedNotes: document.querySelector(
         "#restrictedNotes"
     ),
+
     refreshAnalyticsButton: document.querySelector(
-    "#refreshAnalyticsButton"
-),
-
-classificationAnalytics: document.querySelector(
-    "#classificationAnalytics"
-),
-
-disciplineAnalytics: document.querySelector(
-    "#disciplineAnalytics"
-),
-
-evaluationAnalytics: document.querySelector(
-    "#evaluationAnalytics"
-),
-
-monthlyAnalytics: document.querySelector(
-    "#monthlyAnalytics"
-),
-
-locationAnalytics: document.querySelector(
-    "#locationAnalytics"
-),
-
-tagAnalytics: document.querySelector(
-    "#tagAnalytics"
-),
+        "#refreshAnalyticsButton"
+    ),
+    classificationAnalytics: document.querySelector(
+        "#classificationAnalytics"
+    ),
+    disciplineAnalytics: document.querySelector(
+        "#disciplineAnalytics"
+    ),
+    evaluationAnalytics: document.querySelector(
+        "#evaluationAnalytics"
+    ),
+    monthlyAnalytics: document.querySelector(
+        "#monthlyAnalytics"
+    ),
+    locationAnalytics: document.querySelector(
+        "#locationAnalytics"
+    ),
+    tagAnalytics: document.querySelector(
+        "#tagAnalytics"
+    ),
 
     noteDetailWorkspace: document.querySelector(
         "#noteDetailWorkspace"
@@ -145,7 +147,9 @@ function formatDisplayDate(value) {
 function getToday() {
     const today = new Date();
     const offset = today.getTimezoneOffset() * 60_000;
-    const localDate = new Date(today.getTime() - offset);
+    const localDate = new Date(
+        today.getTime() - offset
+    );
 
     return localDate.toISOString().split("T")[0];
 }
@@ -156,7 +160,10 @@ function showToast(message, isError = false) {
 
     elements.toast.textContent = message;
     elements.toast.classList.remove("hidden");
-    elements.toast.classList.toggle("error", isError);
+    elements.toast.classList.toggle(
+        "error",
+        isError
+    );
 
     state.toastTimer = window.setTimeout(() => {
         elements.toast.classList.add("hidden");
@@ -181,7 +188,9 @@ async function requestJson(url, options = {}) {
     }
 
     if (!response.ok) {
-        let message = "The request could not be completed.";
+        let message = (
+            "The request could not be completed."
+        );
 
         if (typeof data?.detail === "string") {
             message = data.detail;
@@ -198,6 +207,85 @@ async function requestJson(url, options = {}) {
 }
 
 
+function downloadJson(data, filename) {
+    const jsonContent = JSON.stringify(
+        data,
+        null,
+        2
+    );
+
+    const blob = new Blob(
+        [jsonContent],
+        {
+            type: "application/json",
+        }
+    );
+
+    const downloadUrl = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = downloadUrl;
+    link.download = filename;
+
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    window.setTimeout(() => {
+        URL.revokeObjectURL(downloadUrl);
+    }, 0);
+}
+
+
+async function exportSingleNote(noteId) {
+    try {
+        const exportData = await requestJson(
+            `/notes/${noteId}/export`
+        );
+
+        const paddedNoteId = String(noteId).padStart(
+            6,
+            "0"
+        );
+
+        downloadJson(
+            exportData,
+            `intel-note-INM-${paddedNoteId}.json`
+        );
+
+        showToast("Intelligence note exported.");
+    } catch (error) {
+        showToast(
+            `Unable to export note: ${error.message}`,
+            true
+        );
+    }
+}
+
+
+async function exportAllNotes() {
+    try {
+        const exportData = await requestJson(
+            "/exports/notes"
+        );
+
+        downloadJson(
+            exportData,
+            `intel-notes-export-${getToday()}.json`
+        );
+
+        showToast(
+            `${exportData.record_count} intelligence note(s) exported.`
+        );
+    } catch (error) {
+        showToast(
+            `Unable to export notes: ${error.message}`,
+            true
+        );
+    }
+}
+
+
 function buildFilterQuery() {
     const query = new URLSearchParams();
 
@@ -205,19 +293,27 @@ function buildFilterQuery() {
         keyword: elements.searchInput.value.trim(),
         classification:
             elements.classificationFilter.value,
-        discipline: elements.disciplineFilter.value,
-        reliability: elements.reliabilityFilter.value,
-        credibility: elements.credibilityFilter.value,
-        location: elements.locationFilter.value.trim(),
-        start_date: elements.startDateFilter.value,
-        end_date: elements.endDateFilter.value,
+        discipline:
+            elements.disciplineFilter.value,
+        reliability:
+            elements.reliabilityFilter.value,
+        credibility:
+            elements.credibilityFilter.value,
+        location:
+            elements.locationFilter.value.trim(),
+        start_date:
+            elements.startDateFilter.value,
+        end_date:
+            elements.endDateFilter.value,
     };
 
-    Object.entries(filters).forEach(([key, value]) => {
-        if (value) {
-            query.set(key, value);
+    Object.entries(filters).forEach(
+        ([key, value]) => {
+            if (value) {
+                query.set(key, value);
+            }
         }
-    });
+    );
 
     const queryString = query.toString();
 
@@ -229,11 +325,14 @@ async function loadStatistics() {
     try {
         const notes = await requestJson("/notes");
 
-        elements.totalNotes.textContent = notes.length;
+        elements.totalNotes.textContent =
+            notes.length;
 
-        elements.osintNotes.textContent = notes.filter(
-            (note) => note.discipline === "OSINT"
-        ).length;
+        elements.osintNotes.textContent =
+            notes.filter(
+                (note) =>
+                    note.discipline === "OSINT"
+            ).length;
 
         elements.highReliabilityNotes.textContent =
             notes.filter(
@@ -242,11 +341,13 @@ async function loadStatistics() {
                     note.reliability === "B"
             ).length;
 
-        elements.restrictedNotes.textContent = notes.filter(
-            (note) =>
-                note.classification &&
-                note.classification !== "UNCLASSIFIED"
-        ).length;
+        elements.restrictedNotes.textContent =
+            notes.filter(
+                (note) =>
+                    note.classification &&
+                    note.classification !==
+                        "UNCLASSIFIED"
+            ).length;
     } catch (error) {
         showToast(
             `Unable to load statistics: ${error.message}`,
@@ -255,10 +356,8 @@ async function loadStatistics() {
     }
 }
 
-function renderDistribution(
-    container,
-    items
-) {
+
+function renderDistribution(container, items) {
     if (!items || items.length === 0) {
         container.innerHTML = `
             <p class="empty-state">
@@ -277,7 +376,10 @@ function renderDistribution(
     container.innerHTML = items
         .map((item) => {
             const percentage = Math.max(
-                (item.count / maximumCount) * 100,
+                (
+                    item.count /
+                    maximumCount
+                ) * 100,
                 3
             );
 
@@ -365,10 +467,7 @@ async function loadAnalytics() {
 }
 
 
-function buildBadge(
-    value,
-    className = ""
-) {
+function buildBadge(value, className = "") {
     if (!value) {
         return "";
     }
@@ -395,10 +494,13 @@ function renderNotes() {
     elements.noteList.innerHTML = state.notes
         .map((note) => {
             const evaluation =
-                note.reliability || note.credibility
+                note.reliability ||
+                note.credibility
                     ? `${
                         note.reliability || "—"
-                    }${note.credibility || "—"}`
+                    }${
+                        note.credibility || "—"
+                    }`
                     : null;
 
             return `
@@ -410,7 +512,9 @@ function renderNotes() {
 
                         <span class="note-date">
                             ${escapeHtml(
-                                formatDisplayDate(note.date)
+                                formatDisplayDate(
+                                    note.date
+                                )
                             )}
                         </span>
                     </div>
@@ -431,14 +535,21 @@ function renderNotes() {
                             "evaluation"
                         )}
 
-                        ${buildBadge(note.location)}
+                        ${buildBadge(
+                            note.location
+                        )}
                     </div>
 
                     <p class="note-card-body">
                         ${
                             note.body
-                                ? escapeHtml(note.body)
-                                : "No narrative recorded."
+                                ? escapeHtml(
+                                    note.body
+                                )
+                                : (
+                                    "No narrative " +
+                                    "recorded."
+                                )
                         }
                     </p>
 
@@ -451,14 +562,25 @@ function renderNotes() {
                         >
                             View
                         </button>
-<button
-    class="action-button"
-    type="button"
-    data-action="report"
-    data-note-id="${note.id}"
->
-    Report
-</button>
+
+                        <button
+                            class="action-button"
+                            type="button"
+                            data-action="report"
+                            data-note-id="${note.id}"
+                        >
+                            Report
+                        </button>
+
+                        <button
+                            class="action-button"
+                            type="button"
+                            data-action="export"
+                            data-note-id="${note.id}"
+                        >
+                            JSON
+                        </button>
+
                         <button
                             class="action-button"
                             type="button"
@@ -517,23 +639,42 @@ async function loadNotes() {
 function getFormData() {
     return {
         title: elements.noteTitle.value.trim(),
-        date: valueOrNull(elements.noteDate.value),
-        source: valueOrNull(elements.noteSource.value),
+
+        date: valueOrNull(
+            elements.noteDate.value
+        ),
+
+        source: valueOrNull(
+            elements.noteSource.value
+        ),
+
         classification: valueOrNull(
             elements.noteClassification.value
         ),
+
         discipline: valueOrNull(
             elements.noteDiscipline.value
         ),
-        location: valueOrNull(elements.noteLocation.value),
-        tags: valueOrNull(elements.noteTags.value),
+
+        location: valueOrNull(
+            elements.noteLocation.value
+        ),
+
+        tags: valueOrNull(
+            elements.noteTags.value
+        ),
+
         reliability: valueOrNull(
             elements.noteReliability.value
         ),
+
         credibility: valueOrNull(
             elements.noteCredibility.value
         ),
-        body: valueOrNull(elements.noteBody.value),
+
+        body: valueOrNull(
+            elements.noteBody.value
+        ),
     };
 }
 
@@ -541,11 +682,15 @@ function getFormData() {
 function resetForm() {
     elements.noteForm.reset();
     elements.editingNoteId.value = "";
+
     elements.noteFormTitle.textContent = (
         "Create Intelligence Note"
     );
 
-    elements.cancelEditButton.classList.add("hidden");
+    elements.cancelEditButton.classList.add(
+        "hidden"
+    );
+
     elements.noteDate.value = getToday();
 }
 
@@ -562,8 +707,11 @@ function populateForm(note) {
     elements.noteDiscipline.value =
         note.discipline || "";
 
-    elements.noteLocation.value = note.location || "";
-    elements.noteTags.value = note.tags || "";
+    elements.noteLocation.value =
+        note.location || "";
+
+    elements.noteTags.value =
+        note.tags || "";
 
     elements.noteReliability.value =
         note.reliability || "";
@@ -571,13 +719,16 @@ function populateForm(note) {
     elements.noteCredibility.value =
         note.credibility || "";
 
-    elements.noteBody.value = note.body || "";
+    elements.noteBody.value =
+        note.body || "";
 
     elements.noteFormTitle.textContent = (
         "Edit Intelligence Note"
     );
 
-    elements.cancelEditButton.classList.remove("hidden");
+    elements.cancelEditButton.classList.remove(
+        "hidden"
+    );
 
     elements.noteForm.scrollIntoView({
         behavior: "smooth",
@@ -592,7 +743,9 @@ async function saveNote(event) {
     event.preventDefault();
 
     const noteData = getFormData();
-    const editingNoteId = elements.editingNoteId.value;
+
+    const editingNoteId =
+        elements.editingNoteId.value;
 
     const url = editingNoteId
         ? `/notes/${editingNoteId}`
@@ -606,7 +759,9 @@ async function saveNote(event) {
         await requestJson(url, {
             method,
             headers: {
-                "Content-Type": "application/json",
+                "Content-Type": (
+                    "application/json"
+                ),
             },
             body: JSON.stringify(noteData),
         });
@@ -621,8 +776,8 @@ async function saveNote(event) {
 
         await Promise.all([
             loadNotes(),
-    loadStatistics(),
-    loadAnalytics(),
+            loadStatistics(),
+            loadAnalytics(),
         ]);
     } catch (error) {
         showToast(
@@ -635,28 +790,36 @@ async function saveNote(event) {
 
 function renderNoteDetail(note) {
     const evaluation = (
-        note.reliability || note.credibility
+        note.reliability ||
+        note.credibility
     )
         ? `${
             note.reliability || "—"
-        }${note.credibility || "—"}`
+        }${
+            note.credibility || "—"
+        }`
         : "Not evaluated";
 
-    elements.detailTitle.textContent = note.title;
+    elements.detailTitle.textContent =
+        note.title;
 
     elements.noteDetail.innerHTML = `
         <div class="detail-metadata">
             <div class="detail-field">
                 <span>Reporting Date</span>
+
                 <strong>
                     ${escapeHtml(
-                        formatDisplayDate(note.date)
+                        formatDisplayDate(
+                            note.date
+                        )
                     )}
                 </strong>
             </div>
 
             <div class="detail-field">
                 <span>Classification</span>
+
                 <strong>
                     ${escapeHtml(
                         note.classification ||
@@ -667,6 +830,7 @@ function renderNoteDetail(note) {
 
             <div class="detail-field">
                 <span>Discipline</span>
+
                 <strong>
                     ${escapeHtml(
                         note.discipline ||
@@ -677,6 +841,7 @@ function renderNoteDetail(note) {
 
             <div class="detail-field">
                 <span>Source Evaluation</span>
+
                 <strong>
                     ${escapeHtml(evaluation)}
                 </strong>
@@ -684,6 +849,7 @@ function renderNoteDetail(note) {
 
             <div class="detail-field">
                 <span>Source</span>
+
                 <strong>
                     ${escapeHtml(
                         note.source ||
@@ -694,6 +860,7 @@ function renderNoteDetail(note) {
 
             <div class="detail-field">
                 <span>Location</span>
+
                 <strong>
                     ${escapeHtml(
                         note.location ||
@@ -704,16 +871,17 @@ function renderNoteDetail(note) {
 
             <div class="detail-field">
                 <span>Tags</span>
+
                 <strong>
                     ${escapeHtml(
-                        note.tags ||
-                        "None"
+                        note.tags || "None"
                     )}
                 </strong>
             </div>
 
             <div class="detail-field">
                 <span>Record ID</span>
+
                 <strong>
                     ${escapeHtml(note.id)}
                 </strong>
@@ -727,13 +895,18 @@ function renderNoteDetail(note) {
                 ${
                     note.body
                         ? escapeHtml(note.body)
-                        : "No narrative recorded."
+                        : (
+                            "No narrative " +
+                            "recorded."
+                        )
                 }
             </p>
         </section>
     `;
 
-    elements.noteDetailWorkspace.classList.remove("hidden");
+    elements.noteDetailWorkspace.classList.remove(
+        "hidden"
+    );
 
     elements.noteDetailWorkspace.scrollIntoView({
         behavior: "smooth",
@@ -781,10 +954,14 @@ async function deleteNote(noteId) {
         (item) => item.id === noteId
     );
 
-    const noteTitle = note?.title || "this note";
+    const noteTitle =
+        note?.title || "this note";
 
     const confirmed = window.confirm(
-        `Delete "${noteTitle}"? This action cannot be undone.`
+        (
+            `Delete "${noteTitle}"? ` +
+            "This action cannot be undone."
+        )
     );
 
     if (!confirmed) {
@@ -804,7 +981,9 @@ async function deleteNote(noteId) {
         }
 
         if (
-            Number(elements.editingNoteId.value) === noteId
+            Number(
+                elements.editingNoteId.value
+            ) === noteId
         ) {
             resetForm();
         }
@@ -813,8 +992,8 @@ async function deleteNote(noteId) {
 
         await Promise.all([
             loadNotes(),
-    loadStatistics(),
-    loadAnalytics(),
+            loadStatistics(),
+            loadAnalytics(),
         ]);
     } catch (error) {
         showToast(
@@ -834,7 +1013,10 @@ function handleNoteListClick(event) {
         return;
     }
 
-    const noteId = Number(button.dataset.noteId);
+    const noteId = Number(
+        button.dataset.noteId
+    );
+
     const action = button.dataset.action;
 
     if (!Number.isInteger(noteId)) {
@@ -844,13 +1026,19 @@ function handleNoteListClick(event) {
     if (action === "view") {
         viewNote(noteId);
     }
-if (action === "report") {
-    window.open(
-        `/notes/${noteId}/report`,
-        "_blank",
-        "noopener,noreferrer"
-    );
-}
+
+    if (action === "report") {
+        window.open(
+            `/notes/${noteId}/report`,
+            "_blank",
+            "noopener,noreferrer"
+        );
+    }
+
+    if (action === "export") {
+        exportSingleNote(noteId);
+    }
+
     if (action === "edit") {
         editNote(noteId);
     }
@@ -864,8 +1052,14 @@ if (action === "report") {
 function closeDetail() {
     state.selectedNoteId = null;
 
-    elements.noteDetailWorkspace.classList.add("hidden");
-    elements.detailTitle.textContent = "Intelligence Note";
+    elements.noteDetailWorkspace.classList.add(
+        "hidden"
+    );
+
+    elements.detailTitle.textContent = (
+        "Intelligence Note"
+    );
+
     elements.noteDetail.innerHTML = "";
 }
 
@@ -887,9 +1081,12 @@ function clearFilters() {
 function queueSearch() {
     window.clearTimeout(state.searchTimer);
 
-    state.searchTimer = window.setTimeout(() => {
-        loadNotes();
-    }, 300);
+    state.searchTimer = window.setTimeout(
+        () => {
+            loadNotes();
+        },
+        300
+    );
 }
 
 
@@ -909,22 +1106,29 @@ function registerEventListeners() {
         async () => {
             await Promise.all([
                 loadNotes(),
-    loadStatistics(),
-    loadAnalytics(),
+                loadStatistics(),
+                loadAnalytics(),
             ]);
 
-            showToast("Intelligence holdings refreshed.");
+            showToast(
+                "Intelligence holdings refreshed."
+            );
         }
     );
 
-    elements.refreshAnalyticsButton.addEventListener(
-    "click",
-    async () => {
-        await loadAnalytics();
+    elements.exportAllButton.addEventListener(
+        "click",
+        exportAllNotes
+    );
 
-        showToast("Analytics refreshed.");
-    }
-);
+    elements.refreshAnalyticsButton.addEventListener(
+        "click",
+        async () => {
+            await loadAnalytics();
+
+            showToast("Analytics refreshed.");
+        }
+    );
 
     elements.clearFiltersButton.addEventListener(
         "click",
@@ -974,8 +1178,8 @@ async function initializeApplication() {
 
     await Promise.all([
         loadNotes(),
-loadStatistics(),
-loadAnalytics(),
+        loadStatistics(),
+        loadAnalytics(),
     ]);
 }
 
