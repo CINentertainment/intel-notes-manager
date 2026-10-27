@@ -451,7 +451,14 @@ function renderNotes() {
                         >
                             View
                         </button>
-
+<button
+    class="action-button"
+    type="button"
+    data-action="report"
+    data-note-id="${note.id}"
+>
+    Report
+</button>
                         <button
                             class="action-button"
                             type="button"
@@ -837,7 +844,13 @@ function handleNoteListClick(event) {
     if (action === "view") {
         viewNote(noteId);
     }
-
+if (action === "report") {
+    window.open(
+        `/notes/${noteId}/report`,
+        "_blank",
+        "noopener,noreferrer"
+    );
+}
     if (action === "edit") {
         editNote(noteId);
     }

@@ -524,3 +524,43 @@ def test_analytics_with_notes():
         "2026-09": 1,
         "2026-10": 2,
     }
+def test_note_report():
+    note_data = sample_note(
+        "Protective surveillance report"
+    )
+    note_data["body"] = (
+        "Synthetic reporting indicates repeated activity "
+        "near the identified facility."
+    )
+
+    create_response = client.post(
+        "/notes",
+        json=note_data,
+    )
+
+    assert create_response.status_code == 201
+
+    note_id = create_response.json()["id"]
+
+    response = client.get(
+        f"/notes/{note_id}/report"
+    )
+
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith(
+        "text/html"
+    )
+    assert "Protective surveillance report" in response.text
+    assert "INTELLIGENCE NOTE REPORT" in response.text
+    assert "Synthetic reporting indicates" in response.text
+    assert "Print / Save as PDF" in response.text
+    assert "INM-000001" in response.text
+
+
+def test_note_report_for_missing_note():
+    response = client.get("/notes/999/report")
+
+    assert response.status_code == 404
+    assert response.json() == {
+        "detail": "Intelligence note not found.",
+    }

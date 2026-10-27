@@ -1,12 +1,12 @@
 from pathlib import Path
 
 from fastapi import Depends, FastAPI, HTTPException, Response, status
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
-from app import analytics, models, schemas
+from app import analytics, models, reporting, schemas
 from app.database import Base, engine, get_db
 
 
@@ -69,6 +69,24 @@ def dashboard():
         STATIC_DIR / "index.html"
     )
 
+@app.get(
+    "/notes/{note_id}/report",
+    response_class=HTMLResponse,
+    include_in_schema=False,
+)
+def note_report(
+    note_id: int,
+    database: Session = Depends(get_db),
+):
+    note = get_note_or_404(
+        note_id,
+        database,
+    )
+
+    return HTMLResponse(
+        content=reporting.build_note_report(note),
+        status_code=status.HTTP_200_OK,
+    )
 
 @app.get("/health")
 def health_check():
