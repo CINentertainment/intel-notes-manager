@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="description"
+        content="Intel Notes Manager intelligence collection and analysis workspace"
+    >
+
+    <title>Intel Notes Manager</title>
+
+    <link
+        rel="stylesheet"
+        href="/static/styles.css"
+    >
+</head>
+
+<body>
+    <header class="application-header">
+        <div class="header-content">
+            <div>
+                <p class="eyebrow">CIN ENTERTAINMENT</p>
+
+                <h1>Intel Notes Manager</h1>
+
+                <p class="subtitle">
+                    Structured collection, source evaluation, and
+                    intelligence note management
+                </p>
+            </div>
+
+            <div class="system-status">
+                <span class="status-light"></span>
+                System Operational
+            </div>
+        </div>
+    </header>
+
+    <main class="dashboard">
+        <section class="notice-banner">
+            <strong>Development Environment</strong>
+
+            <span>
+                Use only fictional, synthetic, public, or otherwise
+                non-sensitive information.
+            </span>
+        </section>
+
+        <section class="statistics-grid">
+            <article class="stat-card purple">
+                <p>Total Notes</p>
+                <strong id="totalNotes">0</strong>
+            </article>
+
+            <article class="stat-card blue">
+                <p>OSINT Notes</p>
+                <strong id="osintNotes">0</strong>
+            </article>
+
+            <article class="stat-card amber">
+                <p>High Reliability</p>
+                <strong id="highReliabilityNotes">0</strong>
+            </article>
+
+            <article class="stat-card red">
+                <p>Restricted Notes</p>
+                <strong id="restrictedNotes">0</strong>
+            </article>
+        </section>
+
+        <section class="analytics-workspace">
+    <div class="section-heading">
+        <div>
+            <p class="eyebrow">ANALYTIC OVERVIEW</p>
+            <h2>Intelligence Holdings Analysis</h2>
+        </div>
+
+        <button
+            id="refreshAnalyticsButton"
+            class="secondary-button"
+            type="button"
+        >
+            Refresh Analytics
+        </button>
+    </div>
+
+    <div class="analytics-grid">
+        <article class="panel analytics-panel">
+            <h3>Classification Distribution</h3>
+
+            <div
+                id="classificationAnalytics"
+                class="distribution-list"
+            >
+                <p class="empty-state">
+                    Loading analytics...
+                </p>
+            </div>
+        </article>
+
+        <article class="panel analytics-panel">
+            <h3>Discipline Distribution</h3>
+
+            <div
+                id="disciplineAnalytics"
+                class="distribution-list"
+            >
+                <p class="empty-state">
+                    Loading analytics...
+                </p>
+            </div>
+        </article>
+
+        <article class="panel analytics-panel">
+            <h3>Source Evaluation</h3>
+
+            <div
+                id="evaluationAnalytics"
+                class="distribution-list"
+            >
+                <p class="empty-state">
+                    Loading analytics...
+                </p>
+            </div>
+        </article>
+
+        <article class="panel analytics-panel">
+            <h3>Monthly Reporting</h3>
+
+            <div
+                id="monthlyAnalytics"
+                class="distribution-list"
+            >
+                <p class="empty-state">
+                    Loading analytics...
+                </p>
+            </div>
+        </article>
+
+        <article class="panel analytics-panel">
+            <h3>Top Locations</h3>
+
+            <div
+                id="locationAnalytics"
+                class="distribution-list"
+            >
+                <p class="empty-state">
+                    Loading analytics...
+                </p>
+            </div>
+        </article>
+
+        <article class="panel analytics-panel">
+            <h3>Top Tags</h3>
+
+            <div
+                id="tagAnalytics"
+                class="distribution-list"
+            >
+                <p class="empty-state">
+                    Loading analytics...
+                </p>
+            </div>
+        </article>
+    </div>
+</section>
+
+        <section class="primary-workspace">
+            <article class="panel note-form-panel">
+                <div class="panel-heading">
+                    <div>
+                        <p class="eyebrow">COLLECTION ENTRY</p>
+                        <h2 id="noteFormTitle">
+                            Create Intelligence Note
+                        </h2>
+                    </div>
+                </div>
+
+                <form id="noteForm">
+                    <input
+                        id="editingNoteId"
+                        type="hidden"
+                    >
+
+                    <label for="noteTitle">
+                        Note Title
+                    </label>
+
+                    <input
+                        id="noteTitle"
+                        type="text"
+                        maxlength="250"
+                        placeholder="Brief descriptive title"
+                        required
+                    >
+
+                    <div class="form-grid two-column">
+                        <div>
+                            <label for="noteDate">
+                                Reporting Date
+                            </label>
+
+                            <input
+                                id="noteDate"
+                                type="date"
+                            >
+                        </div>
+
+                        <div>
+                            <label for="noteSource">
+                                Source
+                            </label>
+
+                            <input
+                                id="noteSource"
+                                type="text"
+                                maxlength="250"
+                                placeholder="Report, publication, or source"
+                            >
+                        </div>
+
+                        <div>
+                            <label for="noteClassification">
+                                Classification
+                            </label>
+
+                            <select id="noteClassification">
+                                <option value="">
+                                    Not specified
+                                </option>
+
+                                <option value="UNCLASSIFIED">
+                                    UNCLASSIFIED
+                                </option>
+
+                                <option value="CUI">
+                                    CUI
+                                </option>
+
+                                <option value="CONFIDENTIAL">
+                                    CONFIDENTIAL
+                                </option>
+
+                                <option value="SECRET">
+                                    SECRET
+                                </option>
+
+                                <option value="TOP SECRET">
+                                    TOP SECRET
+                                </option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="noteDiscipline">
+                                Intelligence Discipline
+                            </label>
+
+                            <select id="noteDiscipline">
+                                <option value="">
+                                    Not specified
+                                </option>
+
+                                <option value="HUMINT">
+                                    HUMINT
+                                </option>
+
+                                <option value="OSINT">
+                                    OSINT
+                                </option>
+
+                                <option value="SIGINT">
+                                    SIGINT
+                                </option>
+
+                                <option value="GEOINT">
+                                    GEOINT
+                                </option>
+
+                                <option value="MASINT">
+                                    MASINT
+                                </option>
+
+                                <option value="CYBINT">
+                                    CYBINT
+                                </option>
+
+                                <option value="ALL-SOURCE">
+                                    ALL-SOURCE
+                                </option>
+
+                                <option value="OTHER">
+                                    OTHER
+                                </option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="noteReliability">
+                                Source Reliability
+                            </label>
+
+                            <select id="noteReliability">
+                                <option value="">
+                                    Not evaluated
+                                </option>
+
+                                <option value="A">
+                                    A — Completely reliable
+                                </option>
+
+                                <option value="B">
+                                    B — Usually reliable
+                                </option>
+
+                                <option value="C">
+                                    C — Fairly reliable
+                                </option>
+
+                                <option value="D">
+                                    D — Not usually reliable
+                                </option>
+
+                                <option value="E">
+                                    E — Unreliable
+                                </option>
+
+                                <option value="F">
+                                    F — Cannot be judged
+                                </option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="noteCredibility">
+                                Information Credibility
+                            </label>
+
+                            <select id="noteCredibility">
+                                <option value="">
+                                    Not evaluated
+                                </option>
+
+                                <option value="1">
+                                    1 — Confirmed
+                                </option>
+
+                                <option value="2">
+                                    2 — Probably true
+                                </option>
+
+                                <option value="3">
+                                    3 — Possibly true
+                                </option>
+
+                                <option value="4">
+                                    4 — Doubtfully true
+                                </option>
+
+                                <option value="5">
+                                    5 — Improbable
+                                </option>
+
+                                <option value="6">
+                                    6 — Cannot be judged
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <label for="noteLocation">
+                        Location
+                    </label>
+
+                    <input
+                        id="noteLocation"
+                        type="text"
+                        maxlength="250"
+                        placeholder="City, region, country, or facility"
+                    >
+
+                    <label for="noteTags">
+                        Tags
+                    </label>
+
+                    <input
+                        id="noteTags"
+                        type="text"
+                        maxlength="500"
+                        placeholder="Comma-separated keywords"
+                    >
+
+                    <label for="noteBody">
+                        Intelligence Note
+                    </label>
+
+                    <textarea
+                        id="noteBody"
+                        rows="9"
+                        maxlength="20000"
+                        placeholder="Record the observation, report, context, and relevant details"
+                    ></textarea>
+
+                    <div class="button-row">
+                        <button
+                            class="primary-button"
+                            type="submit"
+                        >
+                            Save Note
+                        </button>
+
+                        <button
+                            id="cancelEditButton"
+                            class="secondary-button hidden"
+                            type="button"
+                        >
+                            Cancel Edit
+                        </button>
+                    </div>
+                </form>
+            </article>
+
+            <article class="panel note-register-panel">
+                <div class="panel-heading">
+                    <div>
+                        <p class="eyebrow">
+                            INTELLIGENCE HOLDINGS
+                        </p>
+
+                        <h2>Note Register</h2>
+                    </div>
+<input
+    id="importFileInput"
+    class="hidden"
+    type="file"
+    accept=".json,application/json"
+>
+
+<button
+    id="importButton"
+    class="secondary-button"
+    type="button"
+>
+    Import JSON
+</button>
+
+<div class="button-row">
+    <button
+        id="exportAllButton"
+        class="secondary-button"
+        type="button"
+    >
+        Export All JSON
+    </button>
+
+    <button
+        id="refreshButton"
+        class="secondary-button"
+        type="button"
+    >
+        Refresh
+    </button>
+</div>
+                </div>
+
+                <div class="filter-grid">
+                    <input
+                        id="searchInput"
+                        type="search"
+                        placeholder="Search titles, content, sources, locations, or tags"
+                    >
+
+                    <select id="classificationFilter">
+                        <option value="">
+                            All classifications
+                        </option>
+
+                        <option value="UNCLASSIFIED">
+                            UNCLASSIFIED
+                        </option>
+
+                        <option value="CUI">CUI</option>
+
+                        <option value="CONFIDENTIAL">
+                            CONFIDENTIAL
+                        </option>
+
+                        <option value="SECRET">
+                            SECRET
+                        </option>
+
+                        <option value="TOP SECRET">
+                            TOP SECRET
+                        </option>
+                    </select>
+
+                    <select id="disciplineFilter">
+                        <option value="">
+                            All disciplines
+                        </option>
+
+                        <option value="HUMINT">
+                            HUMINT
+                        </option>
+
+                        <option value="OSINT">
+                            OSINT
+                        </option>
+
+                        <option value="SIGINT">
+                            SIGINT
+                        </option>
+
+                        <option value="GEOINT">
+                            GEOINT
+                        </option>
+
+                        <option value="MASINT">
+                            MASINT
+                        </option>
+
+                        <option value="CYBINT">
+                            CYBINT
+                        </option>
+
+                        <option value="ALL-SOURCE">
+                            ALL-SOURCE
+                        </option>
+
+                        <option value="OTHER">
+                            OTHER
+                        </option>
+                    </select>
+
+                    <select id="reliabilityFilter">
+                        <option value="">
+                            All reliability ratings
+                        </option>
+
+                        <option value="A">A</option>
+                        <option value="B">B</option>
+                        <option value="C">C</option>
+                        <option value="D">D</option>
+                        <option value="E">E</option>
+                        <option value="F">F</option>
+                    </select>
+
+                    <select id="credibilityFilter">
+                        <option value="">
+                            All credibility ratings
+                        </option>
+
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                    </select>
+
+                    <input
+                        id="locationFilter"
+                        type="search"
+                        placeholder="Filter by location"
+                    >
+
+                    <div>
+                        <label for="startDateFilter">
+                            Start Date
+                        </label>
+
+                        <input
+                            id="startDateFilter"
+                            type="date"
+                        >
+                    </div>
+
+                    <div>
+                        <label for="endDateFilter">
+                            End Date
+                        </label>
+
+                        <input
+                            id="endDateFilter"
+                            type="date"
+                        >
+                    </div>
+                </div>
+
+                <div class="filter-actions">
+                    <button
+                        id="clearFiltersButton"
+                        class="secondary-button"
+                        type="button"
+                    >
+                        Clear Filters
+                    </button>
+                </div>
+
+                <div
+                    id="noteList"
+                    class="note-list"
+                >
+                    <p class="empty-state">
+                        Loading intelligence notes...
+                    </p>
+                </div>
+            </article>
+        </section>
+
+        <section
+            id="noteDetailWorkspace"
+            class="detail-workspace hidden"
+        >
+            <article class="panel">
+                <div class="panel-heading">
+                    <div>
+                        <p class="eyebrow">
+                            SELECTED RECORD
+                        </p>
+
+                        <h2 id="detailTitle">
+                            Intelligence Note
+                        </h2>
+                    </div>
+
+                    <button
+                        id="closeDetailButton"
+                        class="secondary-button"
+                        type="button"
+                    >
+                        Close
+                    </button>
+                </div>
+
+                <div
+                    id="noteDetail"
+                    class="note-detail"
+                ></div>
+            </article>
+        </section>
+    </main>
+
+    <footer>
+        Intel Notes Manager · Version 2.0.0 · CIN Entertainment
+    </footer>
+
+    <div
+        id="toast"
+        class="toast hidden"
+        role="status"
+        aria-live="polite"
+    ></div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,380 @@
+from pathlib import Path
+
+from fastapi import Depends, FastAPI, HTTPException, Response, status
+from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.staticfiles import StaticFiles
+from sqlalchemy import or_, select
+from sqlalchemy.orm import Session
+
+from app import analytics, exporting, models, reporting, schemas
+from app.database import Base, engine, get_db
+
+
+Base.metadata.create_all(bind=engine)
+
+BASE_DIR = Path(__file__).resolve().parent
+STATIC_DIR = BASE_DIR / "static"
+
+
+app = FastAPI(
+    title="Intel Notes Manager",
+    description=(
+        "A structured intelligence note-management application for "
+        "recording, searching, evaluating, and organizing intelligence "
+        "information."
+    ),
+    version="2.0.0",
+)
+
+app.mount(
+    "/static",
+    StaticFiles(directory=STATIC_DIR),
+    name="static",
+)
+
+
+def get_note_or_404(
+    note_id: int,
+    database: Session,
+) -> models.IntelligenceNote:
+    note = database.get(
+        models.IntelligenceNote,
+        note_id,
+    )
+
+    if note is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Intelligence note not found.",
+        )
+
+    return note
+
+
+@app.get("/")
+def read_root():
+    return {
+        "application": "Intel Notes Manager",
+        "status": "operational",
+        "version": "2.0.0",
+    }
+
+
+@app.get(
+    "/dashboard",
+    include_in_schema=False,
+)
+def dashboard():
+    return FileResponse(
+        STATIC_DIR / "index.html"
+    )
+
+@app.get(
+    "/notes/{note_id}/report",
+    response_class=HTMLResponse,
+    include_in_schema=False,
+)
+def note_report(
+    note_id: int,
+    database: Session = Depends(get_db),
+):
+    note = get_note_or_404(
+        note_id,
+        database,
+    )
+
+    return HTMLResponse(
+        content=reporting.build_note_report(note),
+        status_code=status.HTTP_200_OK,
+    )
+
+@app.get(
+    "/notes/{note_id}/export",
+    response_model=schemas.IntelligenceNoteExport,
+)
+def export_note(
+    note_id: int,
+    database: Session = Depends(get_db),
+):
+    note = get_note_or_404(
+        note_id,
+        database,
+    )
+
+    return exporting.build_note_export(note)
+
+
+@app.get(
+    "/exports/notes",
+    response_model=schemas.IntelligenceNoteCollectionExport,
+)
+def export_all_notes(
+    database: Session = Depends(get_db),
+):
+    statement = select(
+        models.IntelligenceNote
+    ).order_by(
+        models.IntelligenceNote.date.desc(),
+        models.IntelligenceNote.id.desc(),
+    )
+
+    notes = database.scalars(statement).all()
+
+    return exporting.build_collection_export(
+        notes
+    )
+@app.post(
+    "/imports/notes",
+    response_model=schemas.IntelligenceNoteResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+def import_note(
+    export_data: schemas.IntelligenceNoteExport,
+    database: Session = Depends(get_db),
+):
+    note_data = exporting.build_import_data(
+        export_data.record
+    )
+
+    duplicate_statement = select(
+        models.IntelligenceNote
+    ).where(
+        models.IntelligenceNote.title
+        == note_data["title"],
+        models.IntelligenceNote.date
+        == note_data["date"],
+        models.IntelligenceNote.source
+        == note_data["source"],
+        models.IntelligenceNote.classification
+        == note_data["classification"],
+        models.IntelligenceNote.discipline
+        == note_data["discipline"],
+        models.IntelligenceNote.location
+        == note_data["location"],
+        models.IntelligenceNote.tags
+        == note_data["tags"],
+        models.IntelligenceNote.reliability
+        == note_data["reliability"],
+        models.IntelligenceNote.credibility
+        == note_data["credibility"],
+        models.IntelligenceNote.body
+        == note_data["body"],
+    )
+
+    duplicate_note = database.scalars(
+        duplicate_statement
+    ).first()
+
+    if duplicate_note is not None:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=(
+                "This intelligence note has already "
+                "been imported."
+            ),
+        )
+
+    note = models.IntelligenceNote(**note_data)
+
+    database.add(note)
+    database.commit()
+    database.refresh(note)
+
+    return note
+@app.get("/health")
+def health_check():
+    return {
+        "status": "healthy",
+    }
+
+@app.get(
+    "/analytics",
+    response_model=schemas.AnalyticsResponse,
+)
+def get_analytics(
+    database: Session = Depends(get_db),
+):
+    return analytics.build_analytics(database)
+
+@app.post(
+    "/notes",
+    response_model=schemas.IntelligenceNoteResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_note(
+    note_data: schemas.IntelligenceNoteCreate,
+    database: Session = Depends(get_db),
+):
+    note = models.IntelligenceNote(
+        **note_data.model_dump()
+    )
+
+    database.add(note)
+    database.commit()
+    database.refresh(note)
+
+    return note
+
+
+@app.get(
+    "/notes",
+    response_model=list[schemas.IntelligenceNoteResponse],
+)
+def list_notes(
+    keyword: str | None = None,
+    classification: schemas.Classification | None = None,
+    discipline: schemas.Discipline | None = None,
+    reliability: schemas.Reliability | None = None,
+    credibility: schemas.Credibility | None = None,
+    location: str | None = None,
+    start_date: str | None = None,
+    end_date: str | None = None,
+    database: Session = Depends(get_db),
+):
+    statement = select(models.IntelligenceNote)
+
+    if keyword:
+        search_term = f"%{keyword.strip()}%"
+
+        statement = statement.where(
+            or_(
+                models.IntelligenceNote.title.ilike(
+                    search_term
+                ),
+                models.IntelligenceNote.body.ilike(
+                    search_term
+                ),
+                models.IntelligenceNote.source.ilike(
+                    search_term
+                ),
+                models.IntelligenceNote.location.ilike(
+                    search_term
+                ),
+                models.IntelligenceNote.tags.ilike(
+                    search_term
+                ),
+            )
+        )
+
+    if classification:
+        statement = statement.where(
+            models.IntelligenceNote.classification
+            == classification
+        )
+
+    if discipline:
+        statement = statement.where(
+            models.IntelligenceNote.discipline
+            == discipline
+        )
+
+    if reliability:
+        statement = statement.where(
+            models.IntelligenceNote.reliability
+            == reliability
+        )
+
+    if credibility:
+        statement = statement.where(
+            models.IntelligenceNote.credibility
+            == credibility
+        )
+
+    if location:
+        statement = statement.where(
+            models.IntelligenceNote.location.ilike(
+                f"%{location.strip()}%"
+            )
+        )
+
+    if start_date:
+        statement = statement.where(
+            models.IntelligenceNote.date >= start_date
+        )
+
+    if end_date:
+        statement = statement.where(
+            models.IntelligenceNote.date <= end_date
+        )
+
+    statement = statement.order_by(
+        models.IntelligenceNote.date.desc(),
+        models.IntelligenceNote.id.desc(),
+    )
+
+    return database.scalars(statement).all()
+
+
+@app.get(
+    "/notes/{note_id}",
+    response_model=schemas.IntelligenceNoteResponse,
+)
+def get_note(
+    note_id: int,
+    database: Session = Depends(get_db),
+):
+    return get_note_or_404(
+        note_id,
+        database,
+    )
+
+
+@app.patch(
+    "/notes/{note_id}",
+    response_model=schemas.IntelligenceNoteResponse,
+)
+def update_note(
+    note_id: int,
+    note_data: schemas.IntelligenceNoteUpdate,
+    database: Session = Depends(get_db),
+):
+    note = get_note_or_404(
+        note_id,
+        database,
+    )
+
+    changes = note_data.model_dump(
+        exclude_unset=True
+    )
+
+    if (
+        "title" in changes
+        and changes["title"] is None
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail="title cannot be null.",
+        )
+
+    for field_name, value in changes.items():
+        setattr(
+            note,
+            field_name,
+            value,
+        )
+
+    database.commit()
+    database.refresh(note)
+
+    return note
+
+
+@app.delete(
+    "/notes/{note_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+def delete_note(
+    note_id: int,
+    database: Session = Depends(get_db),
+):
+    note = get_note_or_404(
+        note_id,
+        database,
+    )
+
+    database.delete(note)
+    database.commit()
+
+    return Response(
+        status_code=status.HTTP_204_NO_CONTENT
+    )
